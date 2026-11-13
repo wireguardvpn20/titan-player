@@ -1,0 +1,58 @@
+#EXTM3U
+# TITAN MUSIC Live TV candidate list
+# Checked on: 2026-10-23
+# IMPORTANT STATUS: HLS addresses below are documented in a public community M3U on GitHub and use TRT media subdomains. This environment could not perform a live HTTP playback test. Treat as DOCUMENTED / NOT RUNTIME-VERIFIED; streams may be geo-restricted or change.
+# Source for URLs: https://github.com/m3uturkiye/trt_kanallari_m3u/blob/main/trt_kanallari.m3u
+# Rights note: Public access to a stream does not itself grant a right to redistribute or rebroadcast it. Obtain the broadcaster's permission for a public/commercial redistribution.
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRT1.tr" tvg-name="TRT 1" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trt1.png" group-title="Türkiye | TRT",TRT 1
+https://tv-trt1.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRT2.tr" tvg-name="TRT 2" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trt2.png" group-title="Türkiye | TRT",TRT 2
+https://tv-trt2.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRTBelgesel.tr" tvg-name="TRT Belgesel" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trtbelgesel.png" group-title="Türkiye | TRT",TRT Belgesel
+https://tv-trtbelgesel.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRTHaber.tr" tvg-name="TRT Haber" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trthaber.png" group-title="Türkiye | TRT",TRT Haber
+https://tv-trt-haber.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRTSpor.tr" tvg-name="TRT Spor" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trtspor.png" group-title="Türkiye | TRT",TRT Spor
+https://tv-trt-spor.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRTSporYildiz.tr" tvg-name="TRT Spor Yıldız" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trtsporyildiz.png" group-title="Türkiye | TRT",TRT Spor Yıldız
+https://tv-trt-spor-yildiz.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRTCocuk.tr" tvg-name="TRT Çocuk" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trtcocuk.png" group-title="Türkiye | TRT",TRT Çocuk
+https://tv-trtcocuk.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRTDiyanetCocuk.tr" tvg-name="TRT Diyanet Çocuk" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trtdiyanet.png" group-title="Türkiye | TRT",TRT Diyanet Çocuk
+https://tv-trt-diyanet-cocuk.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRTMuzik.tr" tvg-name="TRT Müzik" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trtmuzik.png" group-title="Türkiye | TRT",TRT Müzik
+https://tv-trtmuzik.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRTTurk.tr" tvg-name="TRT Türk" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trtturk.png" group-title="Türkiye | TRT",TRT Türk
+https://tv-trt-turk.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRTAvaz.tr" tvg-name="TRT Avaz" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trtavaz.png" group-title="Türkiye | TRT",TRT Avaz
+https://tv-trtavaz.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRTKurdi.tr" tvg-name="TRT Kurdî" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trtkurdi.png" group-title="Türkiye | TRT",TRT Kurdî
+https://tv-trt-kurdi.medya.trt.com.tr/master_720.m3u8
+
+#STATUS: DOCUMENTED_IN_PUBLIC_PLAYLIST; HOST_IS_TRT_MEDIA_DOMAIN; NOT_RUNTIME_TESTED
+#EXTINF:-1 tvg-id="TRTWorld.tr" tvg-name="TRT World" tvg-logo="https://www.trt.com.tr/Content/Images/Channel/trtworld.png" group-title="International | TRT",TRT World
+https://tv-trtworld.medya.trt.com.tr/master_720.m3u8

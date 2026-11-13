@@ -1,0 +1,2318 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>TITAN | Live TV & Satellite</title>
+
+  <!-- Google Fonts: Vazirmatn -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Hls.js -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://unpkg.com/hls.js@latest';document.head.appendChild(s);"></script>
+
+  <style>
+    /* Spotify Neon Green Theme */
+    :root {
+      --bg-dark: #121212;
+      --bg-card: rgba(24, 24, 24, 0.75);
+      --bg-card-hover: rgba(40, 40, 40, 0.9);
+      --glass-surface: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-border-hover: rgba(29, 185, 84, 0.5);
+      --accent: #1ed760;
+      --accent-glow: rgba(30, 215, 96, 0.45);
+      --accent-grad: linear-gradient(135deg, #1ed760 0%, #1db954 100%);
+      --accent-grad-hot: linear-gradient(135deg, #f43f5e 0%, #ec4899 100%);
+      --text: #ffffff;
+      --text-muted: #b3b3b3;
+      --border: rgba(255, 255, 255, 0.08);
+      --danger: #ef4444;
+      --success: #1ed760;
+      --scene-header: rgba(15, 23, 42, 0.9);
+      --scene-category: rgba(10, 14, 24, 0.85);
+      --scene-sidebar: rgba(10, 15, 26, 0.65);
+      --scene-search: rgba(15, 23, 42, 0.4);
+      --scene-overlay: rgba(9, 13, 22, 0.9);
+      --scene-stream: rgba(15, 23, 42, 0.85);
+      --scene-player: #000000;
+      --scene-active-card: linear-gradient(135deg, rgba(30, 215, 96, 0.16) 0%, rgba(29, 185, 84, 0.22) 100%);
+      --scene-modal: rgba(8, 12, 22, 0.94);
+      --scene-modal-card: rgba(255, 255, 255, 0.045);
+      --scene-modal-border: rgba(255, 255, 255, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Vazirmatn', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      position: fixed;
+      width: 100%;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(30, 215, 96, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(29, 185, 84, 0.08) 0px, transparent 50%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Category Navigation Pills Bar */
+    .category-bar-wrapper {
+      background: rgba(10, 14, 24, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 8px 14px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      z-index: 40;
+    }
+    .category-bar-wrapper::-webkit-scrollbar {
+      display: none;
+    }
+    .category-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: max-content;
+    }
+    .cat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+    }
+    .cat-pill:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-1px);
+    }
+    .cat-pill.active {
+      background: var(--accent-grad);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 3px 14px var(--accent-glow);
+    }
+    .cat-pill.adult-pill.active {
+      background: var(--accent-grad-hot);
+      box-shadow: 0 3px 14px rgba(236, 72, 153, 0.4);
+    }
+
+    /* Live Badge in Stream Overlay */
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .live-pulse {
+      width: 6px;
+      height: 6px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: pulse-live 1.5s infinite;
+    }
+    @keyframes pulse-live {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    /* Header */
+    header {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      z-index: 50;
+      flex-shrink: 0;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(30, 215, 96, 0.35);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 16px var(--accent-glow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .brand-logo svg {
+      width: 22px;
+      height: 22px;
+      fill: none;
+    }
+
+    .brand-title {
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-header-glass {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: var(--text-muted);
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-header-glass:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text);
+      border-color: var(--glass-border-hover);
+      transform: scale(1.05);
+    }
+
+    .btn-header-glass:active {
+      transform: scale(0.95);
+    }
+
+    .btn-header-glass svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .btn {
+      background: var(--glass-surface);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--text);
+      border: 1px solid var(--glass-border);
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--glass-border-hover);
+    }
+
+    .btn-primary {
+      background: var(--accent-grad);
+      color: #fff;
+      border: none;
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+
+    .input-field {
+      background: rgba(14, 21, 37, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      color: var(--text);
+      padding: 7px 12px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .input-field:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* Container */
+    .container {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Video Player Area */
+    .player-wrapper {
+      flex: 3;
+      display: flex;
+      flex-direction: column;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+      justify-content: center;
+      min-height: 0;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+
+    video::-webkit-media-controls-timeline,
+    video::-webkit-media-controls-current-time-display,
+    video::-webkit-media-controls-time-remaining-display {
+      display: none !important;
+    }
+
+    /* Player Overlay (Auto retry & Manual retry) */
+    .player-error-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(9, 13, 22, 0.9);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 20;
+      color: var(--text);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .player-error-overlay.active {
+      display: flex;
+    }
+
+    /* Spinner */
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .error-icon {
+      width: 48px;
+      height: 48px;
+      color: var(--danger);
+    }
+
+    .error-msg {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 80%;
+      line-height: 1.6;
+    }
+
+    .retry-countdown-num {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .btn-retry {
+      background: var(--accent-grad);
+      color: #fff;
+      border: none;
+      padding: 9px 22px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px var(--accent-glow);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn-retry:hover {
+      opacity: 0.9;
+    }
+
+    .btn-retry:active {
+      transform: scale(0.96);
+    }
+
+    .stream-overlay {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      z-index: 10;
+      pointer-events: none;
+      max-width: 85%;
+    }
+
+    .stream-overlay span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 0.8rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .status-dot.online {
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .status-dot.buffering {
+      background: #f59e0b;
+      animation: pulse 1s infinite;
+    }
+
+    .status-dot.error {
+      background: var(--danger);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Sidebar / Channel List */
+    .sidebar {
+      flex: 1;
+      max-width: 380px;
+      min-width: 300px;
+      background: rgba(10, 15, 26, 0.65);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-right: 1px solid var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .search-panel {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.4);
+      flex-shrink: 0;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 7px 0;
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: var(--text-muted);
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      background: var(--accent-grad);
+      color: #fff;
+      border-color: transparent;
+      box-shadow: 0 2px 10px var(--accent-glow);
+    }
+
+    .channel-list {
+      list-style: none;
+      flex: 1;
+      min-height: 0;
+      overflow-y: scroll;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior-y: contain;
+      padding: 8px;
+    }
+
+    .channel-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .channel-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+
+    .channel-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin-bottom: 7px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .channel-item:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--glass-border-hover);
+      transform: translateY(-1px);
+    }
+
+    .channel-item:active {
+      transform: translateY(0);
+      background: var(--bg-card-hover);
+    }
+
+    .channel-item.active {
+      background: linear-gradient(135deg, rgba(30, 215, 96, 0.16) 0%, rgba(29, 185, 84, 0.22) 100%);
+      border: 1px solid var(--accent);
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .channel-lead {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow: hidden;
+      flex: 1;
+      pointer-events: none;
+    }
+
+    .channel-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      color: var(--accent);
+    }
+
+    .channel-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 3px;
+    }
+
+    .channel-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .channel-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+    }
+
+    .badge-hd {
+      color: var(--accent);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+    }
+
+    .channel-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .icon-btn {
+      background: var(--glass-surface);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text);
+      transform: scale(1.05);
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    .icon-btn.is-fav {
+      color: #f59e0b;
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 8px 18px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .shortcuts-help {
+      padding: 8px 14px;
+      background: rgba(0,0,0,0.3);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 850px) {
+      .container {
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .player-wrapper {
+        flex: none;
+        width: 100%;
+        height: 230px;
+        border-bottom: 2px solid var(--border);
+      }
+
+      .sidebar {
+        flex: 1;
+        min-height: 0;
+        max-width: 100%;
+        min-width: 100%;
+        border-right: none;
+        height: auto;
+      }
+
+      .channel-list {
+        flex: 1;
+        min-height: 0;
+      }
+
+      .shortcuts-help {
+        display: none;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .player-wrapper {
+        height: 200px;
+      }
+      .brand-title {
+        font-size: 0.9rem;
+      }
+    }
+  
+
+    /* ==================== TITAN PLAYER: 15 EXTRA THEMES ==================== */
+    body[data-theme] {
+      background-color: var(--bg-dark);
+      color: var(--text);
+      transition: background-color .35s ease, color .25s ease;
+    }
+    body[data-theme] header { background: var(--scene-header); border-bottom-color: var(--border); }
+    body[data-theme] .category-bar-wrapper { background: var(--scene-category); border-bottom-color: var(--glass-border); }
+    body[data-theme] .sidebar { background: var(--scene-sidebar); border-right-color: var(--glass-border); }
+    body[data-theme] .search-panel { background: var(--scene-search); border-bottom-color: var(--border); }
+    body[data-theme] .player-wrapper,
+    body[data-theme] video { background: var(--scene-player); }
+    body[data-theme] .player-error-overlay { background: var(--scene-overlay); }
+    body[data-theme] .stream-overlay { background: var(--scene-stream); border-color: var(--glass-border); }
+    body[data-theme] .channel-item.active { background: var(--scene-active-card); border-color: var(--accent); }
+    body[data-theme] .input-field { background: color-mix(in srgb, var(--bg-dark) 72%, transparent); }
+    body[data-theme] .brand-logo { border-color: var(--glass-border-hover); box-shadow: 0 0 18px var(--accent-glow); }
+    body[data-theme] .brand-logo svg [stroke] { stroke: var(--accent) !important; }
+    body[data-theme] .brand-logo svg [fill]:not([fill="none"]) { fill: var(--accent) !important; }
+    body[data-theme] .badge-hd { border-color: var(--glass-border-hover); }
+    body[data-theme] .btn-primary,
+    body[data-theme] .btn-retry,
+    body[data-theme] .tab-btn.active,
+    body[data-theme] .cat-pill.active { background: var(--accent-grad); box-shadow: 0 3px 14px var(--accent-glow); }
+    body[data-theme] .toast { background: var(--scene-header); border-color: var(--accent); }
+    body[data-theme] #intro-splash { background: var(--bg-dark) !important; }
+    body[data-theme] #intro-splash > div > div:first-child {
+      background: color-mix(in srgb, var(--accent) 12%, transparent) !important;
+      border-color: var(--glass-border-hover) !important;
+      box-shadow: 0 0 35px var(--accent-glow) !important;
+    }
+    body[data-theme] #intro-splash > div > div:first-child svg [stroke] { stroke: var(--accent) !important; }
+    body[data-theme] #intro-splash > div > div:first-child svg [fill]:not([fill="none"]) { fill: var(--accent) !important; }
+    body[data-theme] #splash-bar { background: var(--accent) !important; }
+    body[data-theme] #splash-pct { color: var(--accent) !important; }
+
+    /* Forest / nature */
+    body[data-theme="forest"] {
+      --bg-dark: #061a13; --bg-card: rgba(8, 37, 25, .82); --bg-card-hover: rgba(17, 65, 42, .94);
+      --glass-surface: rgba(97, 155, 106, .10); --glass-border: rgba(139, 194, 137, .20); --glass-border-hover: rgba(112, 230, 142, .72);
+      --accent: #72e69a; --accent-glow: rgba(72, 220, 125, .34); --accent-grad: linear-gradient(135deg, #7be495, #1d8550);
+      --text: #f0fff4; --text-muted: #a7c8b1; --border: rgba(139, 194, 137, .15); --danger: #ff6e70; --success: #72e69a;
+      --scene-header: rgba(4, 27, 18, .94); --scene-category: rgba(5, 25, 17, .92); --scene-sidebar: rgba(5, 28, 19, .86);
+      --scene-search: rgba(13, 47, 29, .58); --scene-overlay: rgba(3, 19, 13, .93); --scene-stream: rgba(4, 31, 20, .92);
+      --scene-player: #020a06; --scene-active-card: linear-gradient(135deg, rgba(114, 230, 154, .20), rgba(29, 133, 80, .28));
+      --scene-modal: rgba(3, 22, 14, .97); --scene-modal-card: rgba(116, 191, 123, .075); --scene-modal-border: rgba(139, 194, 137, .22);
+      background-image: radial-gradient(ellipse at 10% 5%, rgba(51, 130, 75, .34), transparent 42%), radial-gradient(ellipse at 90% 95%, rgba(16, 95, 58, .28), transparent 45%), linear-gradient(135deg, #061a13, #07120e 58%, #0d281a);
+    }
+    body[data-theme="forest"] .brand-logo { border-radius: 13px 13px 17px 17px; }
+
+    /* Royal gold */
+    body[data-theme="royal"] {
+      --bg-dark: #17101e; --bg-card: rgba(44, 30, 47, .84); --bg-card-hover: rgba(70, 44, 64, .96);
+      --glass-surface: rgba(219, 178, 93, .08); --glass-border: rgba(224, 190, 111, .23); --glass-border-hover: rgba(255, 220, 137, .76);
+      --accent: #f2cb70; --accent-glow: rgba(242, 203, 112, .30); --accent-grad: linear-gradient(135deg, #fff0b1, #bc8730);
+      --text: #fff8e8; --text-muted: #c8b99b; --border: rgba(224, 190, 111, .16); --danger: #ff6b77; --success: #f2cb70;
+      --scene-header: rgba(34, 20, 37, .95); --scene-category: rgba(25, 17, 30, .94); --scene-sidebar: rgba(28, 19, 32, .89);
+      --scene-search: rgba(63, 39, 56, .52); --scene-overlay: rgba(21, 14, 26, .94); --scene-stream: rgba(39, 25, 39, .92);
+      --scene-player: #100b13; --scene-active-card: linear-gradient(135deg, rgba(255, 224, 143, .19), rgba(145, 92, 31, .27));
+      --scene-modal: rgba(24, 15, 29, .98); --scene-modal-card: rgba(255, 218, 131, .06); --scene-modal-border: rgba(224, 190, 111, .24);
+      background-image: radial-gradient(ellipse at 50% -10%, rgba(169, 105, 57, .31), transparent 49%), radial-gradient(ellipse at 0% 100%, rgba(110, 59, 105, .24), transparent 42%), linear-gradient(145deg, #17101e, #221626 55%, #120e18);
+    }
+    body[data-theme="royal"] .brand-logo { border-radius: 11px; outline: 1px solid rgba(242, 203, 112, .25); outline-offset: 3px; }
+
+    /* Middle-earth inspired fantasy */
+    body[data-theme="middle-earth"] {
+      --bg-dark: #10150e; --bg-card: rgba(27, 37, 25, .86); --bg-card-hover: rgba(49, 62, 38, .96);
+      --glass-surface: rgba(186, 157, 83, .075); --glass-border: rgba(174, 164, 104, .22); --glass-border-hover: rgba(237, 202, 115, .72);
+      --accent: #d9bd6d; --accent-glow: rgba(211, 183, 92, .28); --accent-grad: linear-gradient(135deg, #ead99a, #8a9a55 58%, #596e40);
+      --text: #f5f0dc; --text-muted: #b5b99c; --border: rgba(174, 164, 104, .15); --danger: #d96d52; --success: #a9c978;
+      --scene-header: rgba(17, 24, 15, .95); --scene-category: rgba(13, 19, 12, .94); --scene-sidebar: rgba(17, 25, 15, .89);
+      --scene-search: rgba(43, 52, 32, .55); --scene-overlay: rgba(10, 15, 9, .95); --scene-stream: rgba(20, 29, 15, .93);
+      --scene-player: #090d07; --scene-active-card: linear-gradient(135deg, rgba(211, 183, 92, .19), rgba(86, 117, 63, .25));
+      --scene-modal: rgba(13, 19, 10, .98); --scene-modal-card: rgba(197, 183, 113, .06); --scene-modal-border: rgba(174, 164, 104, .23);
+      background-image: radial-gradient(circle at 51% 36%, transparent 0 42px, rgba(222, 193, 102, .13) 43px 45px, transparent 46px), radial-gradient(ellipse at 50% 0%, rgba(119, 145, 69, .28), transparent 48%), radial-gradient(ellipse at 90% 100%, rgba(137, 82, 38, .20), transparent 42%), linear-gradient(130deg, #10150e, #182013 50%, #100f0b);
+    }
+    body[data-theme="middle-earth"] .brand-logo { border-radius: 50%; }
+
+    /* Cyrus the Great / Persepolis */
+    body[data-theme="persepolis"] {
+      --bg-dark: #111c2a; --bg-card: rgba(28, 42, 61, .86); --bg-card-hover: rgba(48, 62, 83, .97);
+      --glass-surface: rgba(222, 174, 109, .075); --glass-border: rgba(218, 176, 120, .22); --glass-border-hover: rgba(243, 201, 137, .74);
+      --accent: #e9bd79; --accent-glow: rgba(226, 174, 106, .30); --accent-grad: linear-gradient(135deg, #f7dca6, #be774a 58%, #385c7c);
+      --text: #fff4df; --text-muted: #b9c4d2; --border: rgba(218, 176, 120, .16); --danger: #ee6c59; --success: #d7b06e;
+      --scene-header: rgba(15, 29, 46, .96); --scene-category: rgba(12, 24, 39, .95); --scene-sidebar: rgba(16, 30, 47, .90);
+      --scene-search: rgba(41, 55, 72, .55); --scene-overlay: rgba(9, 19, 31, .95); --scene-stream: rgba(16, 31, 49, .94);
+      --scene-player: #080f19; --scene-active-card: linear-gradient(135deg, rgba(233, 189, 121, .20), rgba(63, 103, 137, .23));
+      --scene-modal: rgba(12, 24, 39, .98); --scene-modal-card: rgba(233, 189, 121, .055); --scene-modal-border: rgba(218, 176, 120, .25);
+      background-image: repeating-linear-gradient(135deg, rgba(223, 172, 103, .035) 0 2px, transparent 2px 18px), radial-gradient(ellipse at 80% 8%, rgba(177, 105, 64, .28), transparent 40%), radial-gradient(ellipse at 5% 100%, rgba(50, 104, 151, .27), transparent 43%), linear-gradient(125deg, #111c2a, #1d2530 55%, #111823);
+    }
+    body[data-theme="persepolis"] .brand-logo { border-radius: 7px 7px 3px 3px; }
+
+    /* Galaxy */
+    body[data-theme="galaxy"] {
+      --bg-dark: #09091d; --bg-card: rgba(25, 22, 53, .86); --bg-card-hover: rgba(45, 39, 86, .96);
+      --glass-surface: rgba(151, 126, 255, .09); --glass-border: rgba(159, 151, 255, .22); --glass-border-hover: rgba(104, 226, 255, .76);
+      --accent: #8ee8ff; --accent-glow: rgba(133, 115, 255, .34); --accent-grad: linear-gradient(135deg, #8ee8ff, #8e6fff 60%, #ca72f5);
+      --text: #f4f1ff; --text-muted: #b6b3db; --border: rgba(159, 151, 255, .16); --danger: #ff6ca9; --success: #8ee8ff;
+      --scene-header: rgba(15, 12, 38, .95); --scene-category: rgba(9, 9, 29, .94); --scene-sidebar: rgba(14, 13, 40, .90);
+      --scene-search: rgba(29, 25, 66, .57); --scene-overlay: rgba(7, 7, 25, .95); --scene-stream: rgba(19, 16, 49, .94);
+      --scene-player: #050510; --scene-active-card: linear-gradient(135deg, rgba(142, 232, 255, .16), rgba(142, 111, 255, .25));
+      --scene-modal: rgba(9, 8, 31, .98); --scene-modal-card: rgba(150, 131, 255, .07); --scene-modal-border: rgba(159, 151, 255, .24);
+      background-image: radial-gradient(1px 1px at 12% 18%, #fff 99%, transparent 100%), radial-gradient(1px 1px at 76% 22%, #c9d7ff 99%, transparent 100%), radial-gradient(2px 2px at 44% 72%, #8ee8ff 99%, transparent 100%), radial-gradient(1px 1px at 86% 81%, #fff 99%, transparent 100%), radial-gradient(ellipse at 50% 15%, rgba(106, 66, 179, .34), transparent 43%), radial-gradient(ellipse at 5% 90%, rgba(35, 90, 169, .28), transparent 44%), linear-gradient(145deg, #09091d, #17102f 58%, #070819);
+      background-size: auto, auto, auto, auto, 100% 100%, 100% 100%, 100% 100%;
+      animation: galaxy-drift 38s ease-in-out infinite alternate;
+    }
+    @keyframes galaxy-drift { from { background-position: 0 0, 0 0, 0 0, 0 0, 0% 0%, 0% 100%, 0 0; } to { background-position: 12px 8px, -10px 12px, 8px -10px, -7px -5px, 100% 25%, 15% 85%, 0 0; } }
+    body[data-theme="galaxy"] .brand-logo { border-radius: 50%; }
+
+    /* Winter / snow */
+    body[data-theme="winter"] {
+      --bg-dark: #0a1828; --bg-card: rgba(20, 44, 65, .83); --bg-card-hover: rgba(34, 70, 96, .95);
+      --glass-surface: rgba(199, 237, 255, .075); --glass-border: rgba(182, 224, 245, .22); --glass-border-hover: rgba(195, 245, 255, .78);
+      --accent: #b7f2ff; --accent-glow: rgba(117, 211, 246, .31); --accent-grad: linear-gradient(135deg, #e3fbff, #80c9eb 55%, #557fb8);
+      --text: #f0faff; --text-muted: #adc6d8; --border: rgba(182, 224, 245, .15); --danger: #ff7f92; --success: #a6e9ff;
+      --scene-header: rgba(12, 31, 49, .95); --scene-category: rgba(9, 24, 40, .94); --scene-sidebar: rgba(10, 29, 47, .90);
+      --scene-search: rgba(25, 52, 73, .55); --scene-overlay: rgba(7, 20, 34, .94); --scene-stream: rgba(12, 31, 49, .92);
+      --scene-player: #050d17; --scene-active-card: linear-gradient(135deg, rgba(183, 242, 255, .18), rgba(85, 127, 184, .24));
+      --scene-modal: rgba(8, 23, 39, .98); --scene-modal-card: rgba(182, 224, 245, .06); --scene-modal-border: rgba(182, 224, 245, .25);
+      background-image: radial-gradient(ellipse at 13% 0%, rgba(121, 202, 239, .25), transparent 40%), radial-gradient(ellipse at 100% 95%, rgba(174, 235, 255, .16), transparent 38%), repeating-linear-gradient(125deg, rgba(213, 245, 255, .025) 0 1px, transparent 1px 24px), linear-gradient(135deg, #0a1828, #102b41 56%, #0a1525);
+    }
+    body[data-theme="winter"] .brand-logo { border-radius: 50% 50% 12px 12px; }
+
+    /* Ocean */
+    body[data-theme="ocean"] {
+      --bg-dark: #041b27; --bg-card: rgba(5, 43, 55, .85); --bg-card-hover: rgba(7, 68, 78, .95);
+      --glass-surface: rgba(66, 224, 216, .075); --glass-border: rgba(70, 204, 201, .22); --glass-border-hover: rgba(86, 255, 228, .75);
+      --accent: #55f1dc; --accent-glow: rgba(48, 228, 207, .30); --accent-grad: linear-gradient(135deg, #8affec, #1ba8b7 60%, #137888);
+      --text: #eaffff; --text-muted: #98c8cf; --border: rgba(70, 204, 201, .15); --danger: #ff777c; --success: #55f1dc;
+      --scene-header: rgba(4, 31, 42, .95); --scene-category: rgba(3, 24, 34, .94); --scene-sidebar: rgba(4, 32, 42, .90);
+      --scene-search: rgba(8, 54, 62, .55); --scene-overlay: rgba(2, 20, 29, .95); --scene-stream: rgba(4, 35, 47, .93);
+      --scene-player: #020c12; --scene-active-card: linear-gradient(135deg, rgba(85, 241, 220, .18), rgba(19, 120, 136, .25));
+      --scene-modal: rgba(3, 25, 35, .98); --scene-modal-card: rgba(70, 204, 201, .06); --scene-modal-border: rgba(70, 204, 201, .24);
+      background-image: radial-gradient(ellipse at 10% 105%, rgba(18, 135, 154, .34), transparent 44%), radial-gradient(ellipse at 88% -5%, rgba(43, 214, 197, .22), transparent 40%), repeating-radial-gradient(ellipse at 52% 115%, transparent 0 24px, rgba(85, 241, 220, .035) 25px 27px, transparent 28px 46px), linear-gradient(135deg, #041b27, #063b45 55%, #031620);
+    }
+
+    /* Dark cyber neon */
+    body[data-theme="cyber"] {
+      --bg-dark: #050711; --bg-card: rgba(11, 16, 33, .88); --bg-card-hover: rgba(17, 29, 52, .97);
+      --glass-surface: rgba(0, 244, 255, .065); --glass-border: rgba(0, 221, 255, .24); --glass-border-hover: rgba(255, 39, 208, .78);
+      --accent: #00f5ff; --accent-glow: rgba(0, 245, 255, .30); --accent-grad: linear-gradient(115deg, #00f5ff, #6d55ff 52%, #ff2bd6);
+      --text: #e8fcff; --text-muted: #8bacc1; --border: rgba(0, 221, 255, .15); --danger: #ff386d; --success: #00f5ff;
+      --scene-header: rgba(5, 8, 21, .96); --scene-category: rgba(4, 6, 17, .95); --scene-sidebar: rgba(5, 10, 25, .92);
+      --scene-search: rgba(10, 20, 39, .68); --scene-overlay: rgba(2, 4, 14, .96); --scene-stream: rgba(5, 10, 25, .94);
+      --scene-player: #01030a; --scene-active-card: linear-gradient(110deg, rgba(0, 245, 255, .15), rgba(255, 43, 214, .12));
+      --scene-modal: rgba(4, 7, 19, .98); --scene-modal-card: rgba(0, 245, 255, .045); --scene-modal-border: rgba(0, 221, 255, .26);
+      background-image: repeating-linear-gradient(0deg, rgba(0, 245, 255, .035) 0 1px, transparent 1px 34px), repeating-linear-gradient(90deg, rgba(255, 43, 214, .035) 0 1px, transparent 1px 34px), radial-gradient(ellipse at 50% 0%, rgba(84, 28, 158, .30), transparent 50%), linear-gradient(135deg, #050711, #0a1020 55%, #080511);
+    }
+    body[data-theme="cyber"] .brand-logo { border-radius: 4px 12px 4px 12px; }
+    body[data-theme="cyber"] .channel-item:hover { transform: translateX(-2px); }
+
+    /* Blood red / burgundy */
+    body[data-theme="blood"] {
+      --bg-dark: #16070d; --bg-card: rgba(43, 13, 25, .87); --bg-card-hover: rgba(76, 18, 37, .97);
+      --glass-surface: rgba(185, 33, 65, .075); --glass-border: rgba(193, 63, 86, .22); --glass-border-hover: rgba(255, 74, 96, .76);
+      --accent: #ff4b61; --accent-glow: rgba(234, 36, 70, .30); --accent-grad: linear-gradient(135deg, #ff5268, #9e1637 58%, #4d0c25);
+      --text: #fff0f2; --text-muted: #c99aa6; --border: rgba(193, 63, 86, .16); --danger: #ff5268; --success: #ff6c7e;
+      --scene-header: rgba(34, 8, 18, .96); --scene-category: rgba(22, 5, 12, .95); --scene-sidebar: rgba(27, 7, 15, .92);
+      --scene-search: rgba(62, 13, 29, .57); --scene-overlay: rgba(16, 3, 8, .96); --scene-stream: rgba(37, 7, 17, .95);
+      --scene-player: #080207; --scene-active-card: linear-gradient(135deg, rgba(255, 75, 97, .18), rgba(88, 10, 37, .33));
+      --scene-modal: rgba(23, 5, 13, .98); --scene-modal-card: rgba(193, 63, 86, .06); --scene-modal-border: rgba(193, 63, 86, .25);
+      background-image: radial-gradient(ellipse at 85% 0%, rgba(135, 12, 43, .35), transparent 44%), radial-gradient(ellipse at 0% 100%, rgba(94, 12, 36, .30), transparent 45%), repeating-linear-gradient(145deg, rgba(255, 50, 78, .022) 0 2px, transparent 2px 22px), linear-gradient(135deg, #16070d, #280914 52%, #10050b);
+    }
+    body[data-theme="blood"] .brand-logo { border-radius: 6px; }
+
+    /* Black and gold */
+    body[data-theme="black-gold"] {
+      --bg-dark: #090909; --bg-card: rgba(23, 22, 17, .90); --bg-card-hover: rgba(45, 39, 21, .97);
+      --glass-surface: rgba(220, 177, 59, .065); --glass-border: rgba(207, 167, 61, .25); --glass-border-hover: rgba(255, 215, 99, .82);
+      --accent: #e8c45e; --accent-glow: rgba(232, 196, 94, .27); --accent-grad: linear-gradient(135deg, #fff0a6, #c99a2e 58%, #7c5b12);
+      --text: #fffbea; --text-muted: #b7ae91; --border: rgba(207, 167, 61, .16); --danger: #e85050; --success: #e8c45e;
+      --scene-header: rgba(9, 9, 8, .97); --scene-category: rgba(5, 5, 5, .97); --scene-sidebar: rgba(12, 12, 10, .94);
+      --scene-search: rgba(34, 31, 19, .60); --scene-overlay: rgba(4, 4, 4, .96); --scene-stream: rgba(10, 10, 8, .96);
+      --scene-player: #000000; --scene-active-card: linear-gradient(135deg, rgba(232, 196, 94, .16), rgba(102, 75, 15, .24));
+      --scene-modal: rgba(8, 8, 7, .99); --scene-modal-card: rgba(232, 196, 94, .045); --scene-modal-border: rgba(207, 167, 61, .26);
+      background-image: radial-gradient(ellipse at 50% -15%, rgba(179, 138, 30, .22), transparent 48%), radial-gradient(ellipse at 100% 100%, rgba(90, 67, 14, .16), transparent 45%), linear-gradient(145deg, #090909, #11100c 52%, #050505);
+    }
+    body[data-theme="black-gold"] .brand-logo { border-radius: 50%; border-width: 2px; }
+
+    /* Motion follows the selected visual identity without affecting player controls. */
+    body[data-theme="forest"] .brand-logo { animation: forest-breathe 4.5s ease-in-out infinite; }
+    @keyframes forest-breathe { 0%, 100% { box-shadow: 0 0 12px var(--accent-glow); } 50% { box-shadow: 0 0 24px var(--accent-glow); } }
+    body[data-theme="royal"] .brand-logo { animation: royal-shimmer 5s ease-in-out infinite; }
+    @keyframes royal-shimmer { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.18); } }
+    body[data-theme="middle-earth"] .brand-logo { animation: ring-glow 6s ease-in-out infinite; }
+    @keyframes ring-glow { 0%, 100% { box-shadow: 0 0 10px var(--accent-glow); } 50% { box-shadow: 0 0 22px var(--accent-glow), inset 0 0 7px var(--accent-glow); } }
+
+    /* Theme selector modal */
+    .theme-modal {
+      position: fixed; inset: 0; z-index: 100000; display: none; align-items: center; justify-content: center;
+      padding: 16px; background: rgba(0, 0, 0, .72); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .theme-modal.open { display: flex; animation: theme-modal-in .18s ease-out; }
+    @keyframes theme-modal-in { from { opacity: 0; } to { opacity: 1; } }
+    .theme-dialog {
+      width: min(720px, 100%); max-height: min(86dvh, 760px); overflow: auto; padding: 18px;
+      background: var(--scene-modal); color: var(--text); border: 1px solid var(--scene-modal-border); border-radius: 20px;
+      box-shadow: 0 24px 90px rgba(0, 0, 0, .52); direction: rtl;
+    }
+    .theme-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+    .theme-dialog h2 { font-size: 1.08rem; font-weight: 900; }
+    .theme-dialog-subtitle { color: var(--text-muted); font-size: .78rem; line-height: 1.8; margin-bottom: 15px; }
+    .theme-close {
+      flex: 0 0 34px; width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--glass-border);
+      background: var(--glass-surface); color: var(--text); cursor: pointer; font-size: 22px; line-height: 1;
+    }
+    .theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    .theme-option {
+      min-width: 0; display: grid; grid-template-columns: 66px minmax(0, 1fr) 18px; align-items: center; gap: 11px;
+      padding: 10px; text-align: right; color: var(--text); background: var(--scene-modal-card); border: 1px solid var(--scene-modal-border);
+      border-radius: 13px; cursor: pointer; transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .theme-option:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .theme-option.selected { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--scene-modal-card)); box-shadow: 0 0 0 1px var(--accent-glow); }
+    .theme-swatch { height: 42px; border-radius: 9px; border: 1px solid rgba(255,255,255,.18); overflow: hidden; position: relative; }
+    .theme-swatch::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 25% 30%, rgba(255,255,255,.42), transparent 28%), linear-gradient(135deg, transparent 45%, rgba(255,255,255,.12) 46% 49%, transparent 50%); }
+    .theme-option[data-theme-value="forest"] .theme-swatch { background: linear-gradient(135deg, #082d1d, #44a76a, #07150f); }
+    .theme-option[data-theme-value="royal"] .theme-swatch { background: linear-gradient(135deg, #3b243b, #f2cb70, #8c5d2d); }
+    .theme-option[data-theme-value="middle-earth"] .theme-swatch { background: radial-gradient(circle at center, #d9bd6d, transparent 38%), linear-gradient(135deg, #10150e, #53673c, #292216); }
+    .theme-option[data-theme-value="persepolis"] .theme-swatch { background: repeating-linear-gradient(135deg, #19354f 0 9px, #c38a57 9px 11px, #182635 11px 20px); }
+    .theme-option[data-theme-value="galaxy"] .theme-swatch { background: radial-gradient(circle at 30% 20%, #fff 1px, transparent 2px), radial-gradient(circle at 70% 70%, #8ee8ff 1px, transparent 2px), linear-gradient(135deg, #09091d, #5144a0, #17102f); }
+    .theme-option[data-theme-value="winter"] .theme-swatch { background: linear-gradient(135deg, #e7fbff, #72bedf 45%, #102943); }
+    .theme-option[data-theme-value="ocean"] .theme-swatch { background: repeating-radial-gradient(ellipse at 50% 120%, #0b5360 0 9px, #1bb8ad 10px 12px, #042633 13px 23px); }
+    .theme-option[data-theme-value="cyber"] .theme-swatch { background: repeating-linear-gradient(0deg, #06121d 0 7px, #0c2332 8px 9px), linear-gradient(90deg, #00f5ff, #ff2bd6); }
+    .theme-option[data-theme-value="blood"] .theme-swatch { background: linear-gradient(135deg, #16070d, #9c1738 55%, #42091e); }
+    .theme-option[data-theme-value="black-gold"] .theme-swatch { background: linear-gradient(135deg, #050505, #d8b64b 48%, #13120d 56%, #050505); }
+    .theme-option[data-theme-value="spotify"] .theme-swatch { background: linear-gradient(135deg, #121212, #1ed760, #0b4224); }
+    .theme-option-copy { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .theme-option-title { font-size: .81rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .theme-option-note { font-size: .66rem; line-height: 1.55; color: var(--text-muted); }
+    .theme-check { color: var(--accent); font-size: 17px; opacity: 0; font-weight: 900; }
+    .theme-option.selected .theme-check { opacity: 1; }
+    .theme-dialog-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: .7rem; }
+    .theme-reset { border: 1px solid var(--glass-border); background: var(--glass-surface); color: var(--text); border-radius: 9px; padding: 7px 10px; cursor: pointer; font: inherit; }
+    .theme-trigger { min-height: 34px; }
+    @media (max-width: 560px) {
+      .theme-trigger .theme-trigger-label { display: none; }
+      .theme-trigger { padding: 7px 9px; }
+      .theme-dialog { padding: 13px; border-radius: 16px; }
+      .theme-grid { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+      .theme-option { grid-template-columns: 58px minmax(0, 1fr) 16px; padding: 8px; }
+      .theme-swatch { height: 38px; }
+      .theme-dialog-footer { align-items: flex-start; flex-direction: column; }
+      .header-controls { gap: 5px; }
+      .header-controls .btn { padding-left: 8px; padding-right: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body[data-theme="forest"] .brand-logo, body[data-theme="royal"] .brand-logo,
+      body[data-theme="middle-earth"] .brand-logo, body[data-theme="galaxy"] { animation: none !important; }
+      .theme-modal.open, .theme-option { animation: none !important; transition: none !important; }
+    }
+
+  
+
+    /* ==================== TITAN PLAYER: THEMES 11–15 + LIVE ATMOSPHERES ==================== */
+    .theme-atmosphere { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; opacity: .8; }
+    body > header, body > .category-bar-wrapper, body > .container { position: relative; z-index: 1; }
+    body > .theme-modal, body > #theme-modal { z-index: 100000; }
+    .theme-atmosphere::before, .theme-atmosphere::after, .atmosphere-haze, .atmosphere-particles { content: ""; position:absolute; inset:-15%; pointer-events:none; }
+    .theme-atmosphere::before { background:radial-gradient(ellipse at 15% 25%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 46%), radial-gradient(ellipse at 85% 80%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 42%); animation: titan-haze 16s ease-in-out infinite alternate; }
+    .theme-atmosphere::after { opacity:.14; background-image:radial-gradient(circle, var(--accent) 1px, transparent 1.5px),radial-gradient(circle, #fff 1px, transparent 1.5px); background-size:67px 67px,113px 113px; background-position:0 0,34px 22px; animation:titan-stars 45s linear infinite; }
+    .atmosphere-haze { opacity:0; background:transparent; }
+    .atmosphere-particles { opacity:0; background:transparent; }
+    @keyframes titan-haze { from { transform:translate3d(-1%, -1%, 0) scale(1); } to { transform:translate3d(2%, 2%, 0) scale(1.08); } }
+    @keyframes titan-stars { from { transform:translateY(-2%); } to { transform:translateY(3%); } }
+    @keyframes titan-snow { from { transform:translateY(-12%) translateX(-1%); } to { transform:translateY(12%) translateX(1%); } }
+    @keyframes titan-wave { 0%,100% { transform:translateX(-3%) translateY(0) rotate(0); } 50% { transform:translateX(3%) translateY(-1.5%) rotate(1deg); } }
+    @keyframes titan-rainbow { 0% { background-position:0% 50%; filter:hue-rotate(0deg); } 100% { background-position:200% 50%; filter:hue-rotate(30deg); } }
+    @keyframes titan-scan { from { transform:translateY(-40%); } to { transform:translateY(45%); } }
+    @keyframes titan-metal-shine { 0%,100% { filter:brightness(1); } 50% { filter:brightness(1.22); } }
+    @keyframes titan-orbit { from { transform:rotate(0deg) scale(1); } to { transform:rotate(360deg) scale(1.08); } }
+
+    body[data-theme="silver-copper"] {
+      --bg-dark:#171719; --bg-card:rgba(42,40,38,.86); --bg-card-hover:rgba(66,61,56,.95); --glass-surface:rgba(208,174,139,.09); --glass-border:rgba(224,198,170,.23); --glass-border-hover:rgba(234,192,145,.8);
+      --accent:#dfc49b; --accent-glow:rgba(215,178,128,.30); --accent-grad:linear-gradient(120deg,#f4f5f5,#d6ba79 48%,#b97750 80%,#e5e7eb); --text:#faf7f2; --text-muted:#c7c1ba; --border:rgba(255,255,255,.12); --danger:#ff6b6b; --success:#e0c69d;
+      --scene-header:rgba(28,27,27,.96); --scene-category:rgba(21,20,20,.96); --scene-sidebar:rgba(25,24,24,.91); --scene-search:rgba(46,42,39,.62); --scene-overlay:rgba(13,13,14,.94); --scene-stream:rgba(29,28,28,.92); --scene-player:#050505; --scene-active-card:linear-gradient(135deg,rgba(227,206,163,.16),rgba(172,106,71,.18)); --scene-modal:rgba(23,22,22,.97); --scene-modal-card:rgba(235,226,210,.06); --scene-modal-border:rgba(224,198,170,.25);
+      background-image:linear-gradient(125deg,#151517,#25201d 46%,#171719 70%,#2c2825);
+    }
+    body[data-theme="colorful"] {
+      --bg-dark:#151126; --bg-card:rgba(34,24,53,.86); --bg-card-hover:rgba(56,36,78,.95); --glass-surface:rgba(255,255,255,.07); --glass-border:rgba(255,255,255,.18); --glass-border-hover:rgba(255,255,255,.62);
+      --accent:#fd77b5; --accent-glow:rgba(167,139,250,.32); --accent-grad:linear-gradient(115deg,#f472b6,#a78bfa,#38bdf8,#4ade80,#facc15); --text:#fffaff; --text-muted:#d0c6e8; --border:rgba(255,255,255,.11); --danger:#fb7185; --success:#4ade80;
+      --scene-header:rgba(27,18,47,.95); --scene-category:rgba(21,14,37,.94); --scene-sidebar:rgba(23,15,41,.86); --scene-search:rgba(57,32,72,.54); --scene-overlay:rgba(15,10,27,.94); --scene-stream:rgba(37,19,57,.91); --scene-player:#080610; --scene-active-card:linear-gradient(135deg,rgba(244,114,182,.16),rgba(56,189,248,.18)); --scene-modal:rgba(17,11,30,.97); --scene-modal-card:rgba(255,255,255,.06); --scene-modal-border:rgba(255,255,255,.18);
+      background-image:linear-gradient(135deg,#241044,#172b52,#4b1745,#163b45,#30204c); background-size:250% 250%; animation:titan-rainbow 22s ease infinite;
+    }
+    body[data-theme="dark-minimal"] {
+      --bg-dark:#090a0c; --bg-card:rgba(19,20,23,.94); --bg-card-hover:rgba(33,34,38,.98); --glass-surface:rgba(255,255,255,.025); --glass-border:rgba(255,255,255,.075); --glass-border-hover:rgba(255,255,255,.27);
+      --accent:#dedfe3; --accent-glow:rgba(220,225,235,.11); --accent-grad:linear-gradient(135deg,#45474d,#18191d); --text:#f1f1f3; --text-muted:#9699a2; --border:rgba(255,255,255,.055); --danger:#de6970; --success:#c8cbd2;
+      --scene-header:rgba(12,13,15,.98); --scene-category:rgba(9,10,12,.98); --scene-sidebar:rgba(13,14,17,.96); --scene-search:rgba(20,21,24,.68); --scene-overlay:rgba(5,5,7,.97); --scene-stream:rgba(15,16,19,.95); --scene-player:#000; --scene-active-card:linear-gradient(135deg,rgba(255,255,255,.045),rgba(125,130,140,.08)); --scene-modal:rgba(10,11,13,.99); --scene-modal-card:rgba(255,255,255,.025); --scene-modal-border:rgba(255,255,255,.08);
+      background-image:linear-gradient(135deg,#090a0c,#111216 55%,#08090b);
+    }
+    body[data-theme="purple-silver"] {
+      --bg-dark:#171521; --bg-card:rgba(39,36,51,.86); --bg-card-hover:rgba(60,55,76,.95); --glass-surface:rgba(222,220,235,.07); --glass-border:rgba(214,209,231,.20); --glass-border-hover:rgba(231,222,255,.68);
+      --accent:#d7c7ff; --accent-glow:rgba(197,174,255,.27); --accent-grad:linear-gradient(135deg,#f3f1f8,#c9b9f1 55%,#9da3b2); --text:#fbfaff; --text-muted:#c2bece; --border:rgba(255,255,255,.10); --danger:#e87990; --success:#d7c7ff;
+      --scene-header:rgba(35,31,48,.96); --scene-category:rgba(24,22,35,.95); --scene-sidebar:rgba(29,27,41,.89); --scene-search:rgba(60,55,76,.55); --scene-overlay:rgba(17,15,26,.95); --scene-stream:rgba(39,35,54,.92); --scene-player:#08080e; --scene-active-card:linear-gradient(135deg,rgba(215,199,255,.17),rgba(195,202,220,.12)); --scene-modal:rgba(23,21,33,.98); --scene-modal-card:rgba(238,236,248,.05); --scene-modal-border:rgba(215,199,255,.20);
+      background-image:radial-gradient(ellipse at 15% 20%,rgba(152,120,219,.19),transparent 45%),linear-gradient(125deg,#171521,#2c2937,#15151b);
+    }
+    body[data-theme="cream-black"] {
+      --bg-dark:#171613; --bg-card:rgba(43,40,34,.90); --bg-card-hover:rgba(64,59,50,.97); --glass-surface:rgba(229,207,164,.075); --glass-border:rgba(229,207,164,.19); --glass-border-hover:rgba(242,222,182,.62);
+      --accent:#e5cfa1; --accent-glow:rgba(220,194,144,.23); --accent-grad:linear-gradient(135deg,#f3e7cd,#bea77d); --text:#fff9ee; --text-muted:#c5baa5; --border:rgba(229,207,164,.12); --danger:#d97567; --success:#e5cfa1;
+      --scene-header:rgba(29,27,23,.97); --scene-category:rgba(20,19,16,.96); --scene-sidebar:rgba(27,25,20,.90); --scene-search:rgba(57,52,42,.54); --scene-overlay:rgba(11,10,8,.94); --scene-stream:rgba(34,31,25,.93); --scene-player:#030302; --scene-active-card:linear-gradient(135deg,rgba(229,207,161,.14),rgba(112,95,68,.18)); --scene-modal:rgba(25,23,19,.98); --scene-modal-card:rgba(229,207,161,.05); --scene-modal-border:rgba(229,207,161,.18);
+      background-image:linear-gradient(135deg,#171613,#27241e 60%,#11100e);
+    }
+
+    .theme-option[data-theme-value="silver-copper"] .theme-swatch { background:linear-gradient(115deg,#cbd5e1,#dfc49b 42%,#b8734f 70%,#f3f4f6); }
+    .theme-option[data-theme-value="colorful"] .theme-swatch { background:linear-gradient(110deg,#f472b6,#a78bfa,#38bdf8,#4ade80,#facc15); background-size:200% 100%; animation:titan-rainbow 5s linear infinite; }
+    .theme-option[data-theme-value="dark-minimal"] .theme-swatch { background:linear-gradient(135deg,#050506,#303136,#08090b); }
+    .theme-option[data-theme-value="purple-silver"] .theme-swatch { background:linear-gradient(120deg,#f8fafc,#b8a3ef,#777d8b,#eee9f9); }
+    .theme-option[data-theme-value="cream-black"] .theme-swatch { background:linear-gradient(125deg,#f0dfb9,#1c1b17 52%,#0a0a08); }
+
+    /* Animated theme atmosphere: snow, ocean currents, digital scan lines, orbiting stars. */
+    body[data-theme="winter"] .theme-atmosphere::after { opacity:.65; background-image:radial-gradient(circle,#fff 0 1.3px,transparent 1.8px),radial-gradient(circle,rgba(220,247,255,.9) 0 2px,transparent 2.7px),radial-gradient(circle,rgba(255,255,255,.8) 0 1px,transparent 1.7px); background-size:47px 47px,89px 89px,131px 131px; background-position:3px 0,26px 41px,52px 13px; animation:titan-snow 7s linear infinite; }
+    body[data-theme="ocean"] .theme-atmosphere::before { background:repeating-radial-gradient(ellipse at 50% 120%,transparent 0 18px,rgba(72,225,217,.10) 19px 21px,transparent 22px 39px),linear-gradient(160deg,rgba(5,128,156,.12),transparent 60%); animation:titan-wave 9s ease-in-out infinite; }
+    body[data-theme="forest"] .theme-atmosphere::after { opacity:.28; background-image:radial-gradient(ellipse,rgba(145,255,161,.75) 0 1px,transparent 8px),radial-gradient(ellipse,rgba(209,255,177,.45) 0 2px,transparent 12px); background-size:83px 116px,137px 151px; animation:titan-stars 29s linear infinite; }
+    body[data-theme="galaxy"] .theme-atmosphere::after, body[data-theme="middle-earth"] .theme-atmosphere::after { opacity:.5; background-size:53px 53px,97px 97px; animation:titan-stars 65s linear infinite; }
+    body[data-theme="cyber"] .theme-atmosphere::before { background:repeating-linear-gradient(0deg,transparent 0 31px,rgba(0,245,255,.08) 32px 33px),linear-gradient(90deg,rgba(0,245,255,.06),transparent 50%,rgba(255,43,214,.07)); animation:titan-scan 8s linear infinite alternate; }
+    body[data-theme="colorful"] .theme-atmosphere::before { background:linear-gradient(110deg,rgba(244,114,182,.12),rgba(167,139,250,.13),rgba(56,189,248,.12),rgba(74,222,128,.10),rgba(250,204,21,.10)); background-size:240% 240%; animation:titan-rainbow 13s linear infinite; }
+    body[data-theme="royal"] .theme-atmosphere::after, body[data-theme="silver-copper"] .brand-logo { animation:titan-metal-shine 5s ease-in-out infinite; }
+    body[data-theme="persepolis"] .brand-logo { box-shadow:0 0 22px rgba(195,138,87,.36),inset 0 -4px rgba(195,138,87,.1); }
+    body[data-theme="black-gold"] .theme-atmosphere::before { background:radial-gradient(circle at 50% 0%,rgba(227,187,70,.14),transparent 42%); }
+
+    /* TITAN animated brand on all views */
+    .brand-copy { display:flex; flex-direction:column; line-height:1.05; gap:4px; }
+    .titan-wordmark { font-size:1.25rem; font-weight:1000; letter-spacing:.20em; color:transparent; background:linear-gradient(90deg,#fff,#d4d4d8,var(--accent),#fff); background-size:250% auto; -webkit-background-clip:text; background-clip:text; text-shadow:0 0 18px var(--accent-glow); animation:titan-rainbow 8s linear infinite; }
+    .owner-subtitle { font-size:.60rem; font-weight:900; letter-spacing:.17em; color:var(--accent); text-shadow:0 0 12px var(--accent-glow); animation:titan-metal-shine 3.6s ease-in-out infinite; }
+    .splash-titan-title { color:transparent; font-size:30px; font-weight:1000; letter-spacing:.24em; background:linear-gradient(90deg,#fff,var(--accent),#fff); background-size:200% auto; -webkit-background-clip:text; background-clip:text; text-shadow:0 0 22px var(--accent-glow); animation:titan-rainbow 4s linear infinite; }
+    .splash-owner-title { color:#fff; letter-spacing:.18em; font-size:10px; font-weight:900; margin-top:-12px; animation:titan-metal-shine 2.8s ease-in-out infinite; }
+    .titan-mode-pill { border-color:color-mix(in srgb,var(--accent) 36%,var(--glass-border)); }
+    .titan-mode-pill:first-child { border-radius:12px 22px 22px 12px; }
+    .titan-mode-pill:nth-child(2) { border-radius:4px 14px 4px 14px; }
+    .titan-mode-pill:nth-child(3) { border-radius:22px 6px 22px 6px; }
+
+    /* Compact but fully functional control deck below the video. */
+    .player-wrapper { min-width:0; }
+    #video-player { flex:1 1 auto; min-height:0; height:auto; width:100%; }
+    .titan-player-controls { position:relative; z-index:30; display:flex; align-items:center; gap:7px; flex-wrap:wrap; flex-shrink:0; padding:8px 10px; background:var(--scene-header); border-top:1px solid var(--glass-border); box-shadow:0 -7px 25px rgba(0,0,0,.18); }
+    .titan-control-btn { min-height:33px; padding:6px 10px; display:inline-flex; align-items:center; justify-content:center; gap:5px; color:var(--text); background:var(--glass-surface); border:1px solid var(--glass-border); border-radius:11px; font-size:.72rem; font-weight:800; cursor:pointer; white-space:nowrap; transition:transform .18s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease; }
+    .titan-control-btn:hover,.titan-control-btn.active { background:var(--accent-grad); color:#101014; border-color:transparent; box-shadow:0 0 14px var(--accent-glow); }
+    .titan-control-btn:active { transform:scale(.94); }
+    .range-control { display:flex; flex-direction:column; gap:4px; min-width:95px; flex:1 1 110px; max-width:185px; }
+    .range-control label { display:flex; justify-content:space-between; align-items:center; gap:4px; font-size:.66rem; font-weight:800; color:var(--text-muted); white-space:nowrap; }
+    .range-control output { color:var(--accent); font-variant-numeric:tabular-nums; }
+    .range-control input[type="range"] { width:100%; accent-color:var(--accent); cursor:ew-resize; height:16px; margin:0; }
+    .player-popover { position:absolute; z-index:80; bottom:calc(100% - 4px); background:var(--scene-modal); border:1px solid var(--glass-border-hover); box-shadow:0 12px 35px rgba(0,0,0,.5),0 0 20px var(--accent-glow); border-radius:14px; padding:9px; min-width:135px; display:flex; flex-direction:column; gap:5px; }
+    .player-popover[hidden] { display:none !important; }
+    .player-popover button { border:1px solid var(--glass-border); background:var(--glass-surface); color:var(--text); text-align:right; padding:7px 9px; border-radius:8px; font:inherit; font-size:.73rem; cursor:pointer; }
+    .player-popover button:hover,.player-popover button.active { background:var(--accent-grad); color:#101014; }
+    .popover-title { color:var(--accent); font-size:.72rem; font-weight:900; padding:2px 5px 5px; }
+    #quality-menu { right:48%; }
+    #visual-menu { right:37%; }
+    body[data-theme="forest"] .titan-control-btn { border-radius:15px 15px 21px 5px; }
+    body[data-theme="royal"] .titan-control-btn { border-radius:6px; border-bottom-width:2px; }
+    body[data-theme="middle-earth"] .titan-control-btn { border-radius:18px 5px 18px 5px; }
+    body[data-theme="persepolis"] .titan-control-btn { border-radius:5px 5px 2px 2px; }
+    body[data-theme="galaxy"] .titan-control-btn { border-radius:18px; }
+    body[data-theme="winter"] .titan-control-btn { border-radius:20px; box-shadow:inset 0 1px rgba(255,255,255,.18); }
+    body[data-theme="ocean"] .titan-control-btn { border-radius:18px 7px 18px 7px; }
+    body[data-theme="cyber"] .titan-control-btn { border-radius:3px 10px 3px 10px; text-transform:uppercase; }
+    body[data-theme="blood"] .titan-control-btn { border-radius:4px; border-bottom:2px solid color-mix(in srgb,var(--accent) 65%,transparent); }
+    body[data-theme="black-gold"] .titan-control-btn { border-radius:18px; }
+    body[data-theme="silver-copper"] .titan-control-btn { border-radius:5px 13px 5px 13px; background-image:linear-gradient(145deg,rgba(255,255,255,.04),rgba(194,128,78,.04)); }
+    body[data-theme="colorful"] .titan-control-btn { border-radius:18px 5px 18px 5px; }
+    body[data-theme="dark-minimal"] .titan-control-btn { border-radius:3px; box-shadow:none; }
+    body[data-theme="purple-silver"] .titan-control-btn { border-radius:22px; }
+    body[data-theme="cream-black"] .titan-control-btn { border-radius:3px 3px 10px 10px; }
+
+    @media (max-width:850px) {
+      .titan-player-controls { gap:5px; padding:6px 7px; }
+      .titan-control-btn { min-height:30px; padding:5px 7px; font-size:.67rem; }
+      .range-control { min-width:105px; max-width:none; }
+      .player-wrapper { height:auto; min-height:270px; max-height:44vh; flex:0 0 44vh; }
+      #video-player { flex:1 1 auto; min-height:110px; }
+      #quality-menu { right:20%; }
+      #visual-menu { right:37%; }
+      header { padding:7px 9px; }
+      .titan-wordmark { font-size:1.05rem; }
+      .owner-subtitle { font-size:.52rem; }
+      .header-controls .btn { padding:6px 8px; font-size:.68rem; }
+    }
+    @media (max-width:480px) {
+      .player-wrapper { min-height:300px; flex-basis:48vh; max-height:48vh; }
+      .titan-player-controls { max-height:115px; overflow:visible; }
+      .range-control { flex:1 1 39%; min-width:90px; }
+      .titan-control-btn { flex:0 0 auto; }
+      .brand-logo { width:31px; height:31px; }
+      .brand-logo svg { width:19px; height:19px; }
+      .brand { gap:6px; }
+      .titan-wordmark { font-size:.92rem; letter-spacing:.13em; }
+      .owner-subtitle { font-size:.47rem; letter-spacing:.10em; }
+      .theme-dialog { max-height:88vh; overflow-y:auto; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      .theme-atmosphere::before,.theme-atmosphere::after,.atmosphere-haze,.atmosphere-particles,.brand-logo,.titan-wordmark,.owner-subtitle,.splash-titan-title,.splash-owner-title { animation:none !important; }
+    }
+
+  
+    /* Theme-specific slider knobs and button silhouettes for every visual skin. */
+    .range-control input[type="range"] { appearance:none; -webkit-appearance:none; height:7px; border-radius:999px; background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 18%,var(--bg-dark))); border:1px solid var(--glass-border); outline:none; }
+    .range-control input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:15px; height:15px; border-radius:50%; background:var(--accent); border:2px solid var(--text); box-shadow:0 0 9px var(--accent-glow); }
+    .range-control input[type="range"]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:var(--accent); border:2px solid var(--text); box-shadow:0 0 9px var(--accent-glow); }
+    body[data-theme="forest"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:3px 10px 3px 10px; transform:rotate(45deg); }
+    body[data-theme="royal"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:2px; transform:rotate(45deg) scale(.9); }
+    body[data-theme="middle-earth"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:50%; box-shadow:0 0 0 3px rgba(217,189,109,.24),0 0 10px var(--accent-glow); }
+    body[data-theme="persepolis"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:2px; }
+    body[data-theme="galaxy"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:50%; box-shadow:0 0 0 3px rgba(142,232,255,.18),0 0 12px var(--accent-glow); }
+    body[data-theme="winter"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:50% 50% 50% 12%; transform:rotate(-45deg); }
+    body[data-theme="ocean"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:50% 15% 50% 50%; }
+    body[data-theme="cyber"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:1px; transform:rotate(45deg); }
+    body[data-theme="blood"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:2px 8px 2px 8px; }
+    body[data-theme="black-gold"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:3px; transform:rotate(45deg) scale(.9); }
+    body[data-theme="silver-copper"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:3px 50% 50% 50%; }
+    body[data-theme="colorful"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:40% 60% 55% 45%; background:var(--accent-grad); }
+    body[data-theme="dark-minimal"] .range-control input[type="range"]::-webkit-slider-thumb { width:12px;height:12px;border-radius:2px;box-shadow:none; }
+    body[data-theme="purple-silver"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.35),0 0 10px var(--accent-glow); }
+    body[data-theme="cream-black"] .range-control input[type="range"]::-webkit-slider-thumb { border-radius:2px 2px 7px 7px; }
+    body[data-theme="forest"] .btn, body[data-theme="forest"] .tab-btn, body[data-theme="forest"] .cat-pill, body[data-theme="forest"] .icon-btn { border-radius:14px 14px 22px 5px; }
+    body[data-theme="royal"] .btn, body[data-theme="royal"] .tab-btn, body[data-theme="royal"] .cat-pill, body[data-theme="royal"] .icon-btn { border-radius:5px; }
+    body[data-theme="middle-earth"] .btn, body[data-theme="middle-earth"] .tab-btn, body[data-theme="middle-earth"] .cat-pill, body[data-theme="middle-earth"] .icon-btn { border-radius:18px 5px 18px 5px; }
+    body[data-theme="persepolis"] .btn, body[data-theme="persepolis"] .tab-btn, body[data-theme="persepolis"] .cat-pill, body[data-theme="persepolis"] .icon-btn { border-radius:5px 5px 2px 2px; }
+    body[data-theme="galaxy"] .btn, body[data-theme="galaxy"] .tab-btn, body[data-theme="galaxy"] .cat-pill, body[data-theme="galaxy"] .icon-btn { border-radius:20px; }
+    body[data-theme="winter"] .btn, body[data-theme="winter"] .tab-btn, body[data-theme="winter"] .cat-pill, body[data-theme="winter"] .icon-btn { border-radius:25px; }
+    body[data-theme="ocean"] .btn, body[data-theme="ocean"] .tab-btn, body[data-theme="ocean"] .cat-pill, body[data-theme="ocean"] .icon-btn { border-radius:18px 7px 18px 7px; }
+    body[data-theme="cyber"] .btn, body[data-theme="cyber"] .tab-btn, body[data-theme="cyber"] .cat-pill, body[data-theme="cyber"] .icon-btn { border-radius:2px 9px 2px 9px; }
+    body[data-theme="blood"] .btn, body[data-theme="blood"] .tab-btn, body[data-theme="blood"] .cat-pill, body[data-theme="blood"] .icon-btn { border-radius:3px; }
+    body[data-theme="black-gold"] .btn, body[data-theme="black-gold"] .tab-btn, body[data-theme="black-gold"] .cat-pill, body[data-theme="black-gold"] .icon-btn { border-radius:20px; }
+    body[data-theme="silver-copper"] .btn, body[data-theme="silver-copper"] .tab-btn, body[data-theme="silver-copper"] .cat-pill, body[data-theme="silver-copper"] .icon-btn { border-radius:4px 13px 4px 13px; }
+    body[data-theme="colorful"] .btn, body[data-theme="colorful"] .tab-btn, body[data-theme="colorful"] .cat-pill, body[data-theme="colorful"] .icon-btn { border-radius:18px 5px 18px 5px; }
+    body[data-theme="dark-minimal"] .btn, body[data-theme="dark-minimal"] .tab-btn, body[data-theme="dark-minimal"] .cat-pill, body[data-theme="dark-minimal"] .icon-btn { border-radius:2px; box-shadow:none; }
+    body[data-theme="purple-silver"] .btn, body[data-theme="purple-silver"] .tab-btn, body[data-theme="purple-silver"] .cat-pill, body[data-theme="purple-silver"] .icon-btn { border-radius:24px; }
+    body[data-theme="cream-black"] .btn, body[data-theme="cream-black"] .tab-btn, body[data-theme="cream-black"] .cat-pill, body[data-theme="cream-black"] .icon-btn { border-radius:3px 3px 10px 10px; }
+
+  </style>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div class="theme-atmosphere" aria-hidden="true"><div class="atmosphere-haze"></div><div class="atmosphere-particles"></div></div>
+
+  <div id="toast" class="toast">پیوند کپی شد!</div>
+
+  <!-- Theme chooser: ten custom themes plus the original Spotify-green appearance -->
+  <div id="theme-modal" class="theme-modal" aria-hidden="true">
+    <section class="theme-dialog" role="dialog" aria-modal="true" aria-labelledby="theme-dialog-title">
+      <div class="theme-dialog-header">
+        <h2 id="theme-dialog-title">🎨 انتخاب تم TITAN</h2>
+        <button type="button" class="theme-close" id="theme-close" aria-label="بستن پنجره تم‌ها">×</button>
+      </div>
+      <p class="theme-dialog-subtitle">هر تم ظاهر پنل، دکمه‌ها، فهرست شبکه‌ها و نورپردازی را تغییر می‌دهد. انتخابت روی همین دستگاه ذخیره می‌شود.</p>
+      <div class="theme-grid" id="theme-grid">
+        <button type="button" class="theme-option" data-theme-value="forest" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🌲 جنگلی و طبیعت</span><span class="theme-option-note">سبز جنگل، نور برگ‌ها و فضای طبیعی</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="royal" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">👑 طلایی سلطنتی</span><span class="theme-option-note">طلایی گرم با بنفش سلطنتی</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="middle-earth" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🧙 ارباب حلقه‌ها</span><span class="theme-option-note">جنگل اسرارآمیز، حلقه نورانی و سبز کهن</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="persepolis" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🏛️ کوروش کبیر و تخت جمشید</span><span class="theme-option-note">آبی سنگی، لاجوردی و نقش‌های الهام‌گرفته از معماری هخامنشی</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="galaxy" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🌌 کهکشانی</span><span class="theme-option-note">ستاره‌ها، بنفش کیهانی و نور آبی</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="winter" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">❄️ برفی و زمستانی</span><span class="theme-option-note">یخی، آبی روشن و حال‌وهوای زمستان</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="ocean" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🌊 اقیانوس زیبا</span><span class="theme-option-note">موج‌های فیروزه‌ای و عمق اقیانوس</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="cyber" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🦾 دارک نئونی سایبری</span><span class="theme-option-note">شبکه دیجیتال با نئون فیروزه‌ای و صورتی</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="blood" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🩸 مشکی، قرمز خونی و زرشکی</span><span class="theme-option-note">قرمز تیره، زرشکی و کنتراست خشن</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="black-gold" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🖤 مشکی و طلایی</span><span class="theme-option-note">مشکی عمیق با جزئیات طلایی مینیمال</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="silver-copper" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🥈 نقره‌ای، طلایی و مسی</span><span class="theme-option-note">فلزهای براق با انعکاس مسی و طلایی</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="colorful" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🌈 رنگارنگ</span><span class="theme-option-note">گرادیان‌های رنگی زنده و متحرک</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="dark-minimal" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🖤 دارک مینیمال</span><span class="theme-option-note">مشکی عمیق، خطوط ظریف و ظاهر مینیمال</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="purple-silver" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">💜 بنفش، نقره‌ای، سفید و طوسی</span><span class="theme-option-note">بنفش اشرافی با نقره‌ای روشن و خاکستری</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="cream-black" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">☕ کرمی و مشکی</span><span class="theme-option-note">کرم گرم، مشکی مات و لبه‌های کلاسیک</span></span><span class="theme-check">✓</span></button>
+        <button type="button" class="theme-option" data-theme-value="spotify" aria-pressed="false"><span class="theme-swatch"></span><span class="theme-option-copy"><span class="theme-option-title">🎵 اسپاتیفای سبز (تم اصلی)</span><span class="theme-option-note">بازگشت به ظاهر سبز فعلی برنامه</span></span><span class="theme-check">✓</span></button>
+      </div>
+      <div class="theme-dialog-footer">
+        <span>تم انتخاب‌شده پس از بستن و بازکردن صفحه هم باقی می‌ماند.</span>
+        <button type="button" class="theme-reset" id="theme-reset">بازگشت به تم اصلی</button>
+      </div>
+    </section>
+  </div>
+
+
+  <!-- Cyberpunk Spotify Intro Splash Screen -->
+  <div id="intro-splash" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0c10; z-index:999999; display:flex; flex-direction:column; justify-content:center; align-items:center; transition:opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s ease;">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:20px; width:85%; max-width:340px;">
+      
+      <!-- Brand Logo Glow -->
+      <div style="width:72px; height:72px; border-radius:24px; background:rgba(30,215,96,0.1); border:1px solid rgba(30,215,96,0.4); display:grid; place-items:center; box-shadow:0 0 35px rgba(30,215,96,0.4); backdrop-filter:blur(10px);">
+        <svg viewBox="0 0 24 24" width="40" height="40" stroke="#1ed760" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+          <rect x="2" y="7" width="20" height="15" rx="3" fill="rgba(30,215,96,0.15)" />
+          <polyline points="17 2 12 7 7 2" />
+          <polygon points="10 11 15 14.5 10 18" fill="#1ed760" />
+        </svg>
+      </div>
+
+      <!-- Title -->
+      <div style="text-align:center;">
+        <div class="splash-titan-title">TITAN</div>
+        <div class="splash-owner-title">OWNER AMIR TITAN</div>
+        <div style="font-size:12px; color:#b3b3b3; margin-top:5px;">پخش زنده TITAN • پخش TV TITAN • پخش ماهواره TITAN</div>
+      </div>
+
+      <!-- Minimal Progress Bar Container (matching the video's aesthetic) -->
+      <div style="width:100%; height:32px; border:2px solid #ffffff; border-radius:6px; position:relative; overflow:hidden; background:#000000; box-shadow:0 0 20px rgba(255,255,255,0.15);">
+        <!-- Fill Bar -->
+        <div id="splash-bar" style="width:0%; height:100%; background:#ffffff; transition:width 0.04s linear;"></div>
+        <!-- Centered Percentage Text -->
+        <div id="splash-pct" style="position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-family:'Vazirmatn', sans-serif; font-size:15px; font-weight:900; color:#1ed760; mix-blend-mode:difference; z-index:2;">0%</div>
+      </div>
+
+      <!-- Quick skip button -->
+      <button id="splash-skip" style="background:transparent; border:none; color:#666; font-size:11px; cursor:pointer; padding:6px 12px; border-radius:6px; transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#666'">ورود مستقیم ›</button>
+    </div>
+  </div>
+
+  <!-- Custom Password Modal for Telegram WebApp -->
+  <div id="pwd-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); z-index:99999; justify-content:center; align-items:center;">
+    <div style="background:rgba(20, 26, 42, 0.85); backdrop-filter:blur(25px); -webkit-backdrop-filter:blur(25px); border:1px solid rgba(236, 72, 153, 0.4); border-radius:20px; padding:28px 24px; max-width:320px; width:90%; text-align:center; box-shadow:0 15px 40px rgba(236, 72, 153, 0.25);">
+      <div style="width:56px; height:56px; margin:0 auto 12px; background:rgba(236, 72, 153, 0.15); border:1px solid rgba(236, 72, 153, 0.3); border-radius:16px; display:grid; place-items:center; font-size:26px; box-shadow:0 0 20px rgba(236, 72, 153, 0.3);">🔞</div>
+      <h3 style="color:#ffffff; margin:0 0 8px 0; font-size:18px; font-weight:700;">ورود به بخش بزرگسالان</h3>
+      <p style="color:#94a3b8; font-size:12.5px; margin:0 0 18px 0; line-height:1.6;">این بخش دارای محتوای رده سنی +18 است.<br>جهت ورود رمز امنیتی اختصاصی را وارد کنید.</p>
+      <input type="password" id="pwd-input" placeholder="رمز عبور..." style="width:100%; padding:12px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.12); background:rgba(10,14,24,0.7); color:#fff; font-size:16px; text-align:center; margin-bottom:8px; box-sizing:border-box; outline:none; transition:all 0.2s;" onfocus="this.style.borderColor='#ec4899'; this.style.boxShadow='0 0 15px rgba(236,72,153,0.3)';" onblur="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.boxShadow='none';">
+      <div id="pwd-error-msg" style="display:none; color:#f87171; font-size:12px; margin-bottom:12px; font-weight:500;">❌ رمز عبور اشتباه است!</div>
+      <div style="display:flex; gap:10px;">
+        <button id="pwd-submit" style="flex:1; padding:12px; background:var(--accent-grad-hot); color:#fff; border:none; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 15px rgba(236,72,153,0.35); transition:transform 0.1s;" onmousedown="this.style.transform='scale(0.97)'" onmouseup="this.style.transform='scale(1)'">تایید و ورود</button>
+        <button id="pwd-cancel" style="flex:1; padding:12px; background:rgba(255,255,255,0.06); color:#94a3b8; border:1px solid rgba(255,255,255,0.1); border-radius:12px; font-weight:500; font-size:14px; cursor:pointer; transition:background 0.2s;">انصراف</button>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #1ed760;">
+          <rect x="2" y="7" width="20" height="15" rx="3" fill="rgba(30, 215, 96, 0.12)" />
+          <polyline points="17 2 12 7 7 2" stroke="#1ed760" />
+          <polygon points="10 11 15 14.5 10 18" fill="#1ed760" stroke="#1ed760" />
+        </svg>
+      </div>
+      <div class="brand-copy"><div class="brand-title titan-wordmark">TITAN</div><div class="owner-subtitle">OWNER AMIR TITAN</div></div>
+    </div>
+
+    <!-- Hidden native elements kept for code compatibility -->
+    <select id="source-selector" style="display: none;">
+      <option value="playlist.m3u">persian</option>
+      <option value="playlist_hd.m3u">persian_hd</option>
+      <option value="playlist_sd.m3u">persian_sd</option>
+      <option value="https://iptv-org.github.io/iptv/categories/sports.m3u">sports</option>
+      <option value="https://iptv-org.github.io/iptv/categories/movies.m3u">movies</option>
+      <option value="https://iptv-org.github.io/iptv/categories/music.m3u">music</option>
+      <option value="https://iptv-org.github.io/iptv/categories/animation.m3u">animation</option>
+      <option value="https://iptv-org.github.io/iptv/languages/eng.m3u">english</option>
+      <option value="https://iptv-org.github.io/iptv/countries/us.m3u">us</option>
+      <option value="https://iptv-org.github.io/iptv/countries/tr.m3u">tr</option>
+      <option value="adult_xxx">adult</option>
+      <option value="custom">custom</option>
+    </select>
+    <input type="text" id="url-loader" style="display: none;">
+    <button id="btn-load-url" style="display: none;"></button>
+    <input type="file" id="file-loader" style="display: none;">
+
+    <div class="header-controls">
+      <button class="btn theme-trigger" id="btn-theme-toggle" type="button" title="انتخاب تم ظاهری" aria-haspopup="dialog" aria-controls="theme-modal">
+        <span aria-hidden="true">🎨</span><span class="theme-trigger-label">تم‌ها</span>
+      </button>
+      <button class="btn" id="btn-refresh-feed" title="به‌روزرسانی استریم">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        تازه سازی
+      </button>
+      <button class="btn btn-primary" id="btn-fullscreen-toggle" title="تمام صفحه">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        تمام صفحه
+      </button>
+    </div>
+  </header>
+
+  <!-- Netflix-Style Modern Category Pills -->
+  <nav class="category-bar-wrapper">
+    <div class="category-pills">
+      <div class="cat-pill titan-mode-pill active" data-source="playlist.m3u"><span>🔴</span> پخش زنده TITAN</div>
+      <div class="cat-pill titan-mode-pill" data-source="playlists/fa/iran-all-streams.m3u"><span>📺</span> پخش TV TITAN</div>
+      <div class="cat-pill titan-mode-pill" data-source="playlists/categories/sat-general.m3u"><span>🛰️</span> پخش ماهواره TITAN</div>
+      <div class="cat-pill" data-source="playlist.m3u">
+        <span>🇮🇷</span> شبکه‌های سراسری ایران
+      </div>
+      <div class="cat-pill" data-source="https://iptv-org.github.io/iptv/categories/sports.m3u">
+        <span>⚽</span> ورزش و فوتبال زنده
+      </div>
+      <div class="cat-pill" data-source="https://iptv-org.github.io/iptv/categories/movies.m3u">
+        <span>🎬</span> فیلم و سریال
+      </div>
+      <div class="cat-pill" data-source="https://iptv-org.github.io/iptv/categories/music.m3u">
+        <span>🎵</span> موزیک و کنسرت
+      </div>
+      <div class="cat-pill" data-source="https://iptv-org.github.io/iptv/languages/eng.m3u">
+        <span>🌍</span> ماهواره و بین‌الملل
+      </div>
+      <div class="cat-pill" data-source="https://iptv-org.github.io/iptv/categories/animation.m3u">
+        <span>🧸</span> انیمیشن و کودک
+      </div>
+      <div class="cat-pill" data-source="https://iptv-org.github.io/iptv/countries/tr.m3u">
+        <span>🇹🇷</span> شبکه‌های ترکیه
+      </div>
+      <div class="cat-pill adult-pill" data-source="adult_xxx">
+        <span>🔞</span> بخش بزرگسالان (+18)
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <main class="player-wrapper">
+      <div class="stream-overlay">
+        <div class="live-badge">
+          <span class="live-pulse"></span>
+          زنده
+        </div>
+        <div id="status-indicator" class="status-dot"></div>
+        <span id="now-playing-title">کانالی انتخاب نشده</span>
+      </div>
+
+      <!-- Player Auto-Retry / Error Overlay -->
+      <div id="player-error-overlay" class="player-error-overlay">
+        <!-- 1. Auto Retry View -->
+        <div id="auto-retry-container" style="display: none; flex-direction: column; align-items: center; gap: 12px;">
+          <div class="spinner"></div>
+          <div class="error-msg">
+            در حال دریافت استریم و اتصال...
+            <br>
+            <span style="font-size:11px; color:#94a3b8;">(اگر وصل نشد کانال دیگری انتخاب کنید یا فیلترشکن را بررسی کنید)</span>
+            <br>
+            (<span id="retry-countdown" class="retry-countdown-num">5</span> ثانیه)
+          </div>
+        </div>
+
+        <!-- 2. Manual Retry View -->
+        <div id="manual-retry-container" style="display: none; flex-direction: column; align-items: center; gap: 14px;">
+          <svg class="error-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+          <div id="error-message-text" class="error-msg">پخش استریم این شبکه با خطا مواجه شد.</div>
+          <button id="btn-retry-stream" class="btn-retry">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6"></path>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            تلاش مجدد
+          </button>
+        </div>
+      </div>
+
+      <video id="video-player" controls autoplay playsinline></video>
+      <div class="titan-player-controls" id="titan-player-controls" aria-label="کنترل‌های پخش TITAN">
+        <button class="titan-control-btn" id="btn-play-pause" type="button" title="پخش یا توقف" aria-label="پخش یا توقف">▶</button>
+        <div class="range-control volume-control"><label for="volume-slider"><span><span data-control-icon="volume">🔊</span> صدا</span><output id="volume-value">70%</output></label><input id="volume-slider" type="range" min="0" max="100" value="70" aria-label="کم و زیاد کردن صدا"></div>
+        <div class="range-control brightness-control"><label for="brightness-slider"><span><span data-control-icon="brightness">☀️</span> نور</span><output id="brightness-value">100%</output></label><input id="brightness-slider" type="range" min="25" max="150" value="100" aria-label="کم و زیاد کردن نور تصویر"></div>
+        <button class="titan-control-btn menu-anchor" id="btn-quality-menu" type="button" aria-expanded="false" aria-controls="quality-menu"><span data-control-icon="quality">⚙</span> کیفیت</button>
+        <div class="player-popover" id="quality-menu" hidden>
+          <div class="popover-title">انتخاب کیفیت</div>
+          <button type="button" data-quality="auto">خودکار</button><button type="button" data-quality="1080">1080p</button><button type="button" data-quality="720">720p</button><button type="button" data-quality="480">480p</button>
+        </div>
+        <button class="titan-control-btn menu-anchor" id="btn-visual-menu" type="button" aria-expanded="false" aria-controls="visual-menu"><span data-control-icon="visual">🎞</span> حالت تصویر</button>
+        <div class="player-popover visual-popover" id="visual-menu" hidden>
+          <div class="popover-title">حالت نمایش تصویر</div>
+          <button type="button" data-visual="dynamic">🌈 پویا</button><button type="button" data-visual="sports">⚽ ورزشی</button><button type="button" data-visual="cinema">🎬 فیلم</button><button type="button" data-visual="standard">🖥 استاندارد</button><button type="button" data-visual="dim">🌙 کم‌نور</button><button type="button" data-visual="bright">☀️ روشن</button>
+        </div>
+        <button class="titan-control-btn" id="btn-favorite-current" type="button" title="افزودن یا حذف کانال از علاقه‌مندی‌ها"><span data-control-icon="favorite">☆</span><span id="favorite-label">دلخواه</span></button>
+        <button class="titan-control-btn" id="btn-pip" type="button" title="تصویر شناور کوچک"><span data-control-icon="pip">▣</span> تصویر کوچک</button>
+        <button class="titan-control-btn" id="btn-player-fullscreen" type="button" title="تمام‌صفحه کردن کادر پخش"><span data-control-icon="fullscreen">⛶</span> تمام‌صفحه</button>
+      </div>
+    </main>
+
+    <aside class="sidebar">
+      <div class="search-panel">
+        <input type="text" id="search-box" class="input-field" placeholder="جستجوی کانال...">
+        
+        <div class="filter-tabs">
+          <button class="tab-btn active" data-tab="all">همه</button>
+          <button class="tab-btn" data-tab="favs">علاقه‌مندی‌ها ★</button>
+          <button class="tab-btn" data-tab="hd">فقط HD</button>
+        </div>
+
+        <select id="group-filter" class="input-field">
+          <option value="">همه دسته‌ها</option>
+        </select>
+      </div>
+
+      <ul id="channel-list" class="channel-list"></ul>
+
+      <div class="shortcuts-help">
+        <span>میانبرها: <b>F</b> (تمام‌صفحه) | <b>M</b> (صدا)</span>
+        <span><b>N</b> / <b>P</b> (کانال بعد/قبل)</span>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    let channels = [];
+    let currentChannelIdx = -1;
+    let activeTab = 'all';
+    let currentSourceUrl = '';
+    let favorites = [];
+    try { favorites = JSON.parse(localStorage.getItem('iptv_favorites') || '[]'); if (!Array.isArray(favorites)) favorites = []; } catch (_) { favorites = []; }
+    let hls = null;
+    let streamVariantIndices = [];
+    let streamVariantPosition = 0;
+    let hlsNetworkErrors = 0;
+
+    // Retry settings
+    const RETRY_SECONDS = 5;
+    let retryInterval = null;
+    let isAutoRetrying = false;
+
+    const video = document.getElementById('video-player');
+    const channelListEl = document.getElementById('channel-list');
+    const searchInput = document.getElementById('search-box');
+    const groupFilter = document.getElementById('group-filter');
+    const nowPlayingTitle = document.getElementById('now-playing-title');
+    const statusIndicator = document.getElementById('status-indicator');
+    const sourceSelector = document.getElementById('source-selector');
+    const urlLoader = document.getElementById('url-loader');
+    const toast = document.getElementById('toast');
+
+    const errorOverlay = document.getElementById('player-error-overlay');
+    const autoRetryContainer = document.getElementById('auto-retry-container');
+    const manualRetryContainer = document.getElementById('manual-retry-container');
+    const retryCountdownEl = document.getElementById('retry-countdown');
+    const errorMsgText = document.getElementById('error-message-text');
+    const retryBtn = document.getElementById('btn-retry-stream');
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+
+    // Theme picker: safely validate the selected theme and persist it on this device.
+    (function setupThemePicker() {
+      const themeModal = document.getElementById('theme-modal');
+      const themeToggle = document.getElementById('btn-theme-toggle');
+      const themeClose = document.getElementById('theme-close');
+      const themeReset = document.getElementById('theme-reset');
+      const themeOptions = Array.from(document.querySelectorAll('.theme-option[data-theme-value]'));
+      const allowedThemes = new Set(['forest', 'royal', 'middle-earth', 'persepolis', 'galaxy', 'winter', 'ocean', 'cyber', 'blood', 'black-gold', 'silver-copper', 'colorful', 'dark-minimal', 'purple-silver', 'cream-black', 'spotify']);
+      const themeNames = {
+        forest: 'جنگلی و طبیعت', royal: 'طلایی سلطنتی', 'middle-earth': 'ارباب حلقه‌ها',
+        persepolis: 'کوروش کبیر و تخت جمشید', galaxy: 'کهکشانی', winter: 'برفی و زمستانی',
+        ocean: 'اقیانوس زیبا', cyber: 'دارک نئونی سایبری', blood: 'مشکی و قرمز خونی',
+        'black-gold': 'مشکی و طلایی', 'silver-copper': 'نقره‌ای، طلایی و مسی', colorful: 'رنگارنگ', 'dark-minimal': 'دارک مینیمال', 'purple-silver': 'بنفش، نقره‌ای، سفید و طوسی', 'cream-black': 'کرمی و مشکی', spotify: 'اسپاتیفای سبز'
+      };
+      let lastFocusedElement = null;
+      const themeIconSets = {
+        forest: {'volume':'🍃','brightness':'🌿','quality':'🪵','visual':'🌲','favorite':'💚','pip':'🦉','fullscreen':'🌄'},
+        royal: {'volume':'🔔','brightness':'👑','quality':'💎','visual':'🏰','favorite':'♛','pip':'🪞','fullscreen':'♜'},
+        'middle-earth': {'volume':'🪕','brightness':'🧙','quality':'💍','visual':'🗡️','favorite':'🪶','pip':'🦅','fullscreen':'🏔️'},
+        persepolis: {'volume':'📯','brightness':'☀️','quality':'🏛️','visual':'🦁','favorite':'𓃭','pip':'🪽','fullscreen':'🪨'},
+        galaxy: {'volume':'🪐','brightness':'✨','quality':'🚀','visual':'🌌','favorite':'🌟','pip':'🛰️','fullscreen':'🌠'},
+        winter: {'volume':'❄️','brightness':'🌨️','quality':'🧊','visual':'⛷️','favorite':'💠','pip':'🐧','fullscreen':'🏔️'},
+        ocean: {'volume':'🐚','brightness':'🫧','quality':'🌊','visual':'🐬','favorite':'🪸','pip':'🐠','fullscreen':'⛵'},
+        cyber: {'volume':'⌁','brightness':'⚡','quality':'⛭','visual':'▣','favorite':'✦','pip':'◈','fullscreen':'⛶'},
+        blood: {'volume':'🩸','brightness':'🔻','quality':'✖','visual':'⚔️','favorite':'♥','pip':'◼','fullscreen':'⬛'},
+        'black-gold': {'volume':'🔊','brightness':'✦','quality':'♛','visual':'◆','favorite':'★','pip':'◈','fullscreen':'⬡'},
+        'silver-copper': {'volume':'🔔','brightness':'☼','quality':'⚙','visual':'◇','favorite':'✧','pip':'▣','fullscreen':'⛶'},
+        colorful: {'volume':'🎨','brightness':'🌈','quality':'🎛️','visual':'🪩','favorite':'💖','pip':'🦄','fullscreen':'🎆'},
+        'dark-minimal': {'volume':'◖','brightness':'◉','quality':'⋯','visual':'▤','favorite':'＋','pip':'□','fullscreen':'⛶'},
+        'purple-silver': {'volume':'🔮','brightness':'✧','quality':'💿','visual':'🪞','favorite':'✦','pip':'◇','fullscreen':'❖'},
+        'cream-black': {'volume':'☕','brightness':'🕯️','quality':'⚙','visual':'▣','favorite':'✶','pip':'▢','fullscreen':'⌗'},
+        spotify: {'volume':'🔊','brightness':'☀️','quality':'⚙','visual':'🎞','favorite':'☆','pip':'▣','fullscreen':'⛶'}
+      };
+      function applyThemeIcons(themeName) {
+        const set = themeIconSets[themeName] || themeIconSets.spotify;
+        document.querySelectorAll('[data-control-icon]').forEach(icon => {
+          const key = icon.dataset.controlIcon;
+          if (set[key]) icon.textContent = set[key];
+        });
+      }
+
+      function getStoredTheme() {
+        try {
+          const saved = localStorage.getItem('titan-player-theme');
+          return allowedThemes.has(saved) ? saved : 'spotify';
+        } catch (_) {
+          return 'spotify';
+        }
+      }
+
+      function applyTheme(themeName, announce = false) {
+        const safeTheme = allowedThemes.has(themeName) ? themeName : 'spotify';
+        document.body.dataset.theme = safeTheme;
+        applyThemeIcons(safeTheme);
+        themeOptions.forEach(option => {
+          const isSelected = option.dataset.themeValue === safeTheme;
+          option.classList.toggle('selected', isSelected);
+          option.setAttribute('aria-pressed', String(isSelected));
+        });
+        try { localStorage.setItem('titan-player-theme', safeTheme); } catch (_) { /* Storage may be disabled in private mode. */ }
+        if (announce) showToast(`تم «${themeNames[safeTheme]}» فعال شد`);
+      }
+
+      function openThemeModal() {
+        lastFocusedElement = document.activeElement;
+        themeModal.classList.add('open');
+        themeModal.setAttribute('aria-hidden', 'false');
+        themeToggle.setAttribute('aria-expanded', 'true');
+        themeClose.focus();
+      }
+
+      function closeThemeModal() {
+        themeModal.classList.remove('open');
+        themeModal.setAttribute('aria-hidden', 'true');
+        themeToggle.setAttribute('aria-expanded', 'false');
+        if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') lastFocusedElement.focus();
+      }
+
+      applyTheme(getStoredTheme(), false);
+      themeToggle.addEventListener('click', openThemeModal);
+      themeClose.addEventListener('click', closeThemeModal);
+      themeModal.addEventListener('click', event => {
+        if (event.target === themeModal) closeThemeModal();
+      });
+      themeOptions.forEach(option => option.addEventListener('click', () => {
+        applyTheme(option.dataset.themeValue, true);
+        closeThemeModal();
+      }));
+      themeReset.addEventListener('click', () => {
+        applyTheme('spotify', true);
+        closeThemeModal();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && themeModal.classList.contains('open')) closeThemeModal();
+      });
+    })();
+
+    // TITAN player deck: volume, brightness, picture modes, quality selection and favorites.
+    const volumeSlider = document.getElementById('volume-slider');
+    const volumeValue = document.getElementById('volume-value');
+    const brightnessSlider = document.getElementById('brightness-slider');
+    const brightnessValue = document.getElementById('brightness-value');
+    const playPauseButton = document.getElementById('btn-play-pause');
+    const qualityButton = document.getElementById('btn-quality-menu');
+    const qualityMenu = document.getElementById('quality-menu');
+    const visualButton = document.getElementById('btn-visual-menu');
+    const visualMenu = document.getElementById('visual-menu');
+    const favoriteCurrentButton = document.getElementById('btn-favorite-current');
+    const visualModes = {
+      dynamic: { label: 'پویا', filter: 'brightness(1) contrast(1.13) saturate(1.25)' },
+      sports: { label: 'ورزشی', filter: 'brightness(1.06) contrast(1.18) saturate(1.14)' },
+      cinema: { label: 'فیلم', filter: 'brightness(.91) contrast(1.13) saturate(.88)' },
+      standard: { label: 'استاندارد', filter: 'brightness(1) contrast(1) saturate(1)' },
+      dim: { label: 'کم‌نور', filter: 'brightness(.68) contrast(1.02) saturate(.86)' },
+      bright: { label: 'روشن', filter: 'brightness(1.20) contrast(1.02) saturate(1.05)' }
+    };
+    let currentVisualMode = 'standard';
+
+    function safeReadSetting(key, fallback) {
+      try { const value = localStorage.getItem(key); return value === null ? fallback : value; } catch (_) { return fallback; }
+    }
+    function safeWriteSetting(key, value) {
+      try { localStorage.setItem(key, String(value)); } catch (_) { /* Private mode or storage disabled. */ }
+    }
+    function applyBrightness(value) {
+      const normalized = Math.max(25, Math.min(150, Number(value) || 100));
+      brightnessSlider.value = normalized;
+      brightnessValue.value = normalized + '%';
+      const mode = visualModes[currentVisualMode] || visualModes.standard;
+      const filterMatch = mode.filter.match(/brightness\(([^)]+)\)/);
+      const modeBrightness = filterMatch ? Number(filterMatch[1]) : 1;
+      const rest = mode.filter.replace(/brightness\([^)]+\)\s*/, '');
+      video.style.filter = `brightness(${(normalized / 100 * modeBrightness).toFixed(2)}) ${rest}`;
+      safeWriteSetting('titan-brightness', normalized);
+    }
+    function applyVisualMode(modeName, announce = true) {
+      if (!visualModes[modeName]) modeName = 'standard';
+      currentVisualMode = modeName;
+      document.querySelectorAll('[data-visual]').forEach(button => button.classList.toggle('active', button.dataset.visual === modeName));
+      applyBrightness(brightnessSlider.value);
+      if (announce) showToast('حالت تصویر «' + visualModes[modeName].label + '» فعال شد');
+      safeWriteSetting('titan-visual-mode', modeName);
+    }
+    function setVolume(value) {
+      const vol = Math.max(0, Math.min(100, Number(value) || 0));
+      video.volume = vol / 100;
+      video.muted = vol === 0;
+      volumeSlider.value = vol;
+      volumeValue.value = vol + '%';
+      safeWriteSetting('titan-volume', vol);
+    }
+    volumeSlider.addEventListener('input', () => setVolume(volumeSlider.value));
+    brightnessSlider.addEventListener('input', () => applyBrightness(brightnessSlider.value));
+    playPauseButton.addEventListener('click', () => {
+      if (video.paused) video.play().then(() => { playPauseButton.textContent = 'Ⅱ'; }).catch(() => showToast('برای شروع پخش، یک کانال انتخاب کنید'));
+      else { video.pause(); playPauseButton.textContent = '▶'; }
+    });
+    video.addEventListener('play', () => { playPauseButton.textContent = 'Ⅱ'; });
+    video.addEventListener('pause', () => { playPauseButton.textContent = '▶'; });
+    video.addEventListener('volumechange', () => {
+      if (!video.muted) { volumeSlider.value = Math.round(video.volume * 100); volumeValue.value = volumeSlider.value + '%'; }
+    });
+    function closePlayerPopovers() {
+      qualityMenu.hidden = true; visualMenu.hidden = true;
+      qualityButton.setAttribute('aria-expanded', 'false'); visualButton.setAttribute('aria-expanded', 'false');
+    }
+    qualityButton.addEventListener('click', event => {
+      event.stopPropagation();
+      const willOpen = qualityMenu.hidden;
+      closePlayerPopovers(); qualityMenu.hidden = !willOpen;
+      qualityButton.setAttribute('aria-expanded', String(willOpen));
+    });
+    visualButton.addEventListener('click', event => {
+      event.stopPropagation();
+      const willOpen = visualMenu.hidden;
+      closePlayerPopovers(); visualMenu.hidden = !willOpen;
+      visualButton.setAttribute('aria-expanded', String(willOpen));
+    });
+    document.addEventListener('click', event => {
+      if (!event.target.closest('.player-popover') && !event.target.closest('#btn-quality-menu') && !event.target.closest('#btn-visual-menu')) closePlayerPopovers();
+    });
+    document.querySelectorAll('[data-visual]').forEach(button => button.addEventListener('click', () => {
+      applyVisualMode(button.dataset.visual); closePlayerPopovers();
+    }));
+    document.querySelectorAll('[data-quality]').forEach(button => button.addEventListener('click', () => {
+      const requested = button.dataset.quality;
+      if (hls && hls.levels && hls.levels.length) {
+        if (requested === 'auto') {
+          hls.currentLevel = -1; hls.nextLevel = -1;
+          showToast('کیفیت روی حالت خودکار قرار گرفت');
+        } else {
+          const targetHeight = Number(requested);
+          const candidates = hls.levels.map((level, index) => ({ index, height: Number(level.height || 0) })).filter(level => level.height > 0);
+          if (!candidates.length) showToast('این استریم کیفیت قابل انتخاب اعلام نکرده است');
+          else {
+            const below = candidates.filter(level => level.height <= targetHeight).sort((a,b) => b.height-a.height);
+            const selected = below[0] || candidates.sort((a,b) => a.height-b.height)[0];
+            hls.currentLevel = selected.index;
+            hls.nextLevel = selected.index;
+            showToast('کیفیت انتخاب شد: ' + selected.height + 'p');
+          }
+        }
+        document.querySelectorAll('[data-quality]').forEach(item => item.classList.toggle('active', item === button));
+      } else if (requested === 'auto') {
+        showToast('کیفیت خودکار؛ تعیین کیفیت به استریم و مرورگر بستگی دارد');
+      } else {
+        showToast('این کانال کیفیت ' + requested + 'p جداگانه ارائه نمی‌کند؛ کیفیت منبع پخش می‌شود');
+      }
+      closePlayerPopovers();
+    }));
+    document.getElementById('btn-player-fullscreen').addEventListener('click', async () => {
+      const wrapper = document.querySelector('.player-wrapper');
+      try {
+        if (!document.fullscreenElement) {
+          if (wrapper.requestFullscreen) await wrapper.requestFullscreen();
+          else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+        } else if (document.exitFullscreen) await document.exitFullscreen();
+      } catch (_) { showToast('تمام‌صفحه در این مرورگر پشتیبانی نمی‌شود'); }
+    });
+    document.getElementById('btn-pip').addEventListener('click', async () => {
+      try {
+        if (document.pictureInPictureElement) await document.exitPictureInPicture();
+        else if (document.pictureInPictureEnabled && video.requestPictureInPicture) await video.requestPictureInPicture();
+        else showToast('تصویر شناور در این مرورگر پشتیبانی نمی‌شود');
+      } catch (_) { showToast('برای تصویر کوچک ابتدا یک ویدیو در حال پخش انتخاب کنید'); }
+    });
+    favoriteCurrentButton.addEventListener('click', () => {
+      if (currentChannelIdx < 0 || !channels[currentChannelIdx]) { showToast('ابتدا یک کانال انتخاب کنید'); return; }
+      toggleFavorite(channels[currentChannelIdx].id || channels[currentChannelIdx].name);
+      updateCurrentFavoriteButton();
+    });
+    function updateCurrentFavoriteButton() {
+      const channel = currentChannelIdx >= 0 ? channels[currentChannelIdx] : null;
+      const isFav = !!channel && favorites.includes(channel.id || channel.name);
+      favoriteCurrentButton.classList.toggle('active', isFav);
+      const favoriteLabel = document.getElementById('favorite-label');
+      if (favoriteLabel) favoriteLabel.textContent = isFav ? 'دلخواه ✓' : 'دلخواه';
+      favoriteCurrentButton.title = isFav ? 'حذف از علاقه‌مندی‌ها' : 'افزودن به علاقه‌مندی‌ها';
+    }
+    const savedVolume = Number(safeReadSetting('titan-volume', '70'));
+    setVolume(Number.isFinite(savedVolume) ? savedVolume : 70);
+    const savedBrightness = Number(safeReadSetting('titan-brightness', '100'));
+    brightnessSlider.value = Number.isFinite(savedBrightness) ? savedBrightness : 100;
+    const savedMode = safeReadSetting('titan-visual-mode', 'standard');
+    applyVisualMode(savedMode, false);
+    applyBrightness(brightnessSlider.value);
+
+    function setStatus(state) {
+      statusIndicator.className = `status-dot ${state}`;
+    }
+
+    function hideOverlays() {
+      stopAutoRetry();
+      errorOverlay.classList.remove('active');
+      autoRetryContainer.style.display = 'none';
+      manualRetryContainer.style.display = 'none';
+    }
+
+    function stopAutoRetry() {
+      if (retryInterval) {
+        clearInterval(retryInterval);
+        retryInterval = null;
+      }
+      isAutoRetrying = false;
+    }
+
+    function startAutoRetryCountdown() {
+      if (isAutoRetrying) return;
+      isAutoRetrying = true;
+
+      setStatus('buffering');
+      errorOverlay.classList.add('active');
+      autoRetryContainer.style.display = 'flex';
+      manualRetryContainer.style.display = 'none';
+
+      let secondsLeft = RETRY_SECONDS;
+      retryCountdownEl.textContent = secondsLeft;
+
+      // هر ثانیه شمارش معکوس را به‌روز و در صورت لزوم درخواست بارگذاری مجدد می‌دهد
+      retryInterval = setInterval(() => {
+        secondsLeft--;
+        retryCountdownEl.textContent = secondsLeft;
+
+        // تلاش میانی در پس‌زمینه
+        if (hls && secondsLeft % 2 === 0) {
+          hls.startLoad();
+        }
+
+        if (secondsLeft <= 0) {
+          stopAutoRetry();
+          if (!tryNextStreamVariant()) showManualRetry('پس از تلاش مجدد و منابع جایگزین، این استریم پاسخ نداد. می‌توانید کانال دیگری انتخاب کنید.');
+        }
+      }, 1000);
+    }
+
+    function showManualRetry(message) {
+      stopAutoRetry();
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+      setStatus('error');
+      errorMsgText.textContent = message || 'امکان پخش زنده این شبکه وجود ندارد.';
+      errorOverlay.classList.add('active');
+      autoRetryContainer.style.display = 'none';
+      manualRetryContainer.style.display = 'flex';
+    }
+
+    function parseM3U(content) {
+      const lines = content.split('\n');
+      const list = [];
+      let temp = null;
+
+      for (let rawLine of lines) {
+        const line = rawLine.trim();
+        if (!line) continue;
+
+        if (line.startsWith('#EXTINF:')) {
+          const idMatch = line.match(/tvg-id="([^"]*)"/);
+          const nameMatch = line.match(/tvg-name="([^"]*)"/);
+          const logoMatch = line.match(/tvg-logo="([^"]*)"/);
+          const groupMatch = line.match(/group-title="([^"]*)"/);
+          const qualityMatch = line.match(/tvg-quality="([^"]*)"/);
+
+          const titlePart = line.split(',').slice(1).join(',').trim();
+          let channelName = (nameMatch && nameMatch[1]) || titlePart || 'شبکه بدون نام';
+          // Clean developer/country artifacts from channel names
+          channelName = channelName.replace(/\.(fr|tr|de|us|uk|ir|ru|es|it|ca|in|pk|eu)$/i, '');
+          channelName = channelName.replace(/\|\s*(US|UK|IR|DE|FR|TR|ES)/gi, '').trim();
+
+          temp = {
+            id: (idMatch && idMatch[1]) || '',
+            name: channelName,
+            logo: (logoMatch && logoMatch[1]) || '',
+            group: (groupMatch && groupMatch[1]) || 'عمومی',
+            quality: (qualityMatch && qualityMatch[1]) || '',
+            url: ''
+          };
+          temp.isHD = /hd|1080|720/i.test(temp.quality) || /hd|1080|720/i.test(temp.name);
+        } else if (!line.startsWith('#') && temp) {
+          temp.url = line;
+          list.push(temp);
+          temp = null;
+        }
+      }
+      return list;
+    }
+
+    function renderChannels() {
+      const q = searchInput.value.toLowerCase().trim();
+      const selectedGroup = groupFilter.value;
+      channelListEl.innerHTML = '';
+
+      const filtered = channels.filter((c) => {
+        const matchesQuery = c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q);
+        const matchesGroup = !selectedGroup || c.group === selectedGroup;
+        const isFav = favorites.includes(c.id || c.name);
+
+        if (activeTab === 'favs' && !isFav) return false;
+        if (activeTab === 'hd' && !c.isHD) return false;
+
+        return matchesQuery && matchesGroup;
+      });
+
+      if (filtered.length === 0) {
+        channelListEl.innerHTML = `<li style="text-align:center; padding: 30px; color: var(--text-muted); font-size: 0.85rem;">شبکه‌ای پیدا نشد</li>`;
+        return;
+      }
+
+      filtered.forEach((c) => {
+        const realIdx = channels.indexOf(c);
+        const isFav = favorites.includes(c.id || c.name);
+        const isActive = realIdx === currentChannelIdx;
+
+        const li = document.createElement('li');
+        li.className = `channel-item ${isActive ? 'active' : ''}`;
+        
+        const logoHtml = c.logo ? 
+          `<div class="channel-avatar"><img src="${c.logo}" alt="" onerror="this.parentElement.innerHTML='<svg width=\\'16\\' height=\\'16\\' viewBox=\\'0 0 24 24\\' fill=\\'currentColor\\'><path d=\\'M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z\\'/></svg>'"></div>` : 
+          `<div class="channel-avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg></div>`;
+
+        li.innerHTML = `
+          <div class="channel-lead">
+            ${logoHtml}
+            <div class="channel-info">
+              <span class="channel-title">${c.name}</span>
+              <div class="channel-meta">
+                ${c.isHD ? '<span class="badge badge-hd">HD</span>' : '<span class="badge">SD</span>'}
+                <span>${c.group}</span>
+              </div>
+            </div>
+          </div>
+          <div class="channel-actions">
+            <button class="icon-btn share-btn" title="اشتراک‌گذاری">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </button>
+            <button class="icon-btn fav-btn ${isFav ? 'is-fav' : ''}" title="نشان کردن">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+              </svg>
+            </button>
+          </div>
+        `;
+
+        li.onclick = (e) => {
+          if (e.target.closest('.icon-btn')) return;
+          playChannel(realIdx, true);
+        };
+
+        li.querySelector('.fav-btn').onclick = () => toggleFavorite(c.id || c.name);
+        li.querySelector('.share-btn').onclick = () => shareChannel(c);
+
+        channelListEl.appendChild(li);
+      });
+    }
+
+    function populateGroups() {
+      const groups = [...new Set(channels.map(c => c.group))].filter(Boolean).sort();
+      groupFilter.innerHTML = '<option value="">همه دسته‌ها</option>';
+      groups.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        opt.textContent = g;
+        groupFilter.appendChild(opt);
+      });
+    }
+
+    function toggleFavorite(id) {
+      if (favorites.includes(id)) {
+        favorites = favorites.filter(item => item !== id);
+      } else {
+        favorites.push(id);
+      }
+      try { localStorage.setItem('iptv_favorites', JSON.stringify(favorites)); } catch (_) {}
+      renderChannels();
+      updateCurrentFavoriteButton();
+    }
+
+    function shareChannel(channel) {
+      const shareUrl = new URL(window.location.origin + window.location.pathname);
+      shareUrl.searchParams.set('channel', channel.id || channel.name);
+      if (currentSourceUrl) shareUrl.searchParams.set('url', currentSourceUrl);
+
+      navigator.clipboard.writeText(shareUrl.toString()).then(() => {
+        showToast('پیوند کانال کپی شد: ' + channel.name);
+      });
+    }
+
+    function updateUrlState(channel) {
+      const url = new URL(window.location);
+      url.searchParams.set('channel', channel.id || channel.name);
+      if (currentSourceUrl) url.searchParams.set('url', currentSourceUrl);
+      window.history.replaceState({}, '', url);
+    }
+
+    function getStreamVariants(index) {
+      const selected = channels[index];
+      if (!selected) return [index];
+      const normalize = value => String(value || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+      const keyName = normalize(selected.name);
+      const keyId = normalize(selected.id);
+      const candidates = channels.map((channel, i) => ({ channel, i })).filter(item => {
+        if (item.i === index || !item.channel.url || item.channel.url === selected.url) return false;
+        const sameId = keyId && normalize(item.channel.id) === keyId;
+        const sameName = keyName && normalize(item.channel.name) === keyName;
+        return sameId || sameName;
+      }).map(item => item.i);
+      return [index, ...candidates].slice(0, 5);
+    }
+    function tryNextStreamVariant() {
+      if (streamVariantPosition + 1 < streamVariantIndices.length) {
+        streamVariantPosition++;
+        const nextIndex = streamVariantIndices[streamVariantPosition];
+        showToast('منبع جایگزین برای پخش امتحان می‌شود…');
+        playChannel(nextIndex, false, true);
+        return true;
+      }
+      return false;
+    }
+
+    function playChannel(index, updateHistory = false, preserveVariants = false) {
+      if (index < 0 || index >= channels.length) return;
+      if (!preserveVariants) { streamVariantIndices = getStreamVariants(index); streamVariantPosition = 0; }
+      hlsNetworkErrors = 0;
+      currentChannelIdx = index;
+      const channel = channels[index];
+
+      hideOverlays();
+      nowPlayingTitle.textContent = channel.name;
+      updateCurrentFavoriteButton();
+      setStatus('buffering');
+      renderChannels();
+
+      if (updateHistory) updateUrlState(channel);
+
+      if (hls) {
+        hls.destroy();
+        hls = null;
+      }
+
+      if (Hls.isSupported()) {
+        hls = new Hls({ 
+          enableWorker: true, 
+          lowLatencyMode: false,
+          backBufferLength: 90,
+          maxBufferLength: 30,
+          manifestLoadingTimeOut: 15000,
+          manifestLoadingMaxRetry: 6,
+          manifestLoadingRetryDelay: 1000,
+          levelLoadingTimeOut: 15000,
+          levelLoadingMaxRetry: 6,
+          fragLoadingTimeOut: 20000,
+          fragLoadingMaxRetry: 6,
+          xhrSetup: function (xhr, url) {
+            xhr.withCredentials = false;
+          }
+        });
+        
+        hls.loadSource(channel.url);
+        hls.attachMedia(video);
+
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          video.play().catch(() => {});
+        });
+
+        // مدیریت خطا: ریکاوری پیشرفته HLS
+        hls.on(Hls.Events.ERROR, (_, data) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.log('HLS network error; recovery/fallback will be attempted.');
+                hlsNetworkErrors++;
+                if (hlsNetworkErrors <= 2) hls.startLoad();
+                else if (!tryNextStreamVariant() && !isAutoRetrying) startAutoRetryCountdown();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.log('HLS media error; attempting recovery.');
+                if (hlsNetworkErrors < 2) { hlsNetworkErrors++; hls.recoverMediaError(); }
+                else if (!tryNextStreamVariant() && !isAutoRetrying) startAutoRetryCountdown();
+                break;
+              default:
+                if (!tryNextStreamVariant() && !isAutoRetrying) startAutoRetryCountdown();
+                break;
+            }
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = channel.url;
+        
+        video.onloadedmetadata = () => {
+          video.play().catch(() => {});
+        };
+
+        video.onerror = () => {
+          if (!isAutoRetrying) {
+            startAutoRetryCountdown();
+          }
+        };
+      }
+    }
+
+    // پخش موفقیت‌آمیز استریم
+    video.addEventListener('playing', () => {
+      hideOverlays();
+      setStatus('online');
+    });
+
+    // کلیک دکمه «تلاش مجدد» دستی
+    retryBtn.addEventListener('click', () => {
+      if (currentChannelIdx >= 0) {
+        playChannel(currentChannelIdx);
+      }
+    });
+
+    const playlistFallbacks = {
+      'playlist.m3u': ['playlists/fa/iran.m3u', 'playlists/iran-compat.m3u'],
+      'playlist_hd.m3u': ['playlists/fa/iran-all-streams.m3u', 'playlist.m3u'],
+      'playlist_sd.m3u': ['playlists/fa/iran-compat.m3u', 'playlist.m3u'],
+      'playlists/fa/iran-all-streams.m3u': ['playlists/fa/iran.m3u', 'playlists/iran-all-streams.m3u'],
+      'playlists/fa/iran.m3u': ['playlists/fa/iran-compat.m3u', 'playlist.m3u'],
+      'TITAN_MUSIC_LIVE.m3u': ['playlists/en/iran-all-streams.m3u', 'playlist.m3u'],
+      'playlists/categories/sat-general.m3u': ['playlists/categories/sat-music.m3u', 'playlists/en/iran-all-streams.m3u']
+    };
+    function getPlaylistFallbacks(url) {
+      const match = String(url).match(/(?:^|\/)([^/?#]+\.m3u)(?:[?#].*)?$/i);
+      const basename = match ? match[1] : '';
+      let choices = (playlistFallbacks[basename] || []).slice();
+      if (/categories\/sports\.m3u/i.test(url)) choices = ['playlists/categories/sat-sports.m3u', ...choices];
+      else if (/categories\/movies\.m3u/i.test(url)) choices = ['playlists/categories/sat-movies.m3u', ...choices];
+      else if (/categories\/music\.m3u/i.test(url)) choices = ['playlists/categories/sat-music.m3u', ...choices];
+      else if (/categories\/animation\.m3u/i.test(url)) choices = ['playlists/categories/sat-kids.m3u', ...choices];
+      else if (/languages\/eng\.m3u/i.test(url)) choices = ['playlists/en/iran-all-streams.m3u', ...choices];
+      else if (/countries\/tr\.m3u/i.test(url)) choices = ['TITAN_MUSIC_LIVE.m3u', ...choices];
+      return [...new Set(choices)].filter(candidate => candidate !== url);
+    }
+    async function fetchPlaylistWithFallback(url) {
+      const candidates = [url, ...getPlaylistFallbacks(url)];
+      let lastError = null;
+      for (const candidate of candidates) {
+        try {
+          const response = await fetch(candidate);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const content = await response.text();
+          if (!content.trim()) throw new Error('فهرست خالی است');
+          return { content, resolvedUrl: candidate };
+        } catch (error) { lastError = error; }
+      }
+      throw lastError || new Error('هیچ منبع فهرست پخشی پاسخ نداد');
+    }
+
+    function loadFromUrl(url, targetChannelName = null) {
+      if (!url) return;
+      currentSourceUrl = url;
+      setStatus('buffering');
+      showToast('در حال بارگذاری فهرست TITAN…');
+
+      // Reset search, category filter and tab when switching source
+      searchInput.value = '';
+      groupFilter.value = '';
+      activeTab = 'all';
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'all'));
+
+      fetchPlaylistWithFallback(url)
+        .then(({content, resolvedUrl}) => {
+          if (resolvedUrl !== url) {
+            currentSourceUrl = resolvedUrl;
+            showToast('منبع جایگزین فهرست فعال شد');
+          }
+          channels = parseM3U(content);
+          populateGroups();
+          renderChannels();
+
+          if (targetChannelName) {
+            const targetIdx = channels.findIndex(
+              c => c.name.toLowerCase() === targetChannelName.toLowerCase() || 
+                   c.id.toLowerCase() === targetChannelName.toLowerCase()
+            );
+            if (targetIdx !== -1) {
+              playChannel(targetIdx);
+              return;
+            }
+          }
+
+          if (channels.length > 0) playChannel(0);
+          showToast(`لیست پخش با ${channels.length} شبکه آماده شد`);
+        })
+        .catch(err => {
+          setStatus('error');
+          showToast('فهرست و منابع جایگزین پاسخ ندادند');
+          errorMsgText.textContent = 'بارگذاری فهرست شبکه‌ها ناموفق بود: ' + err.message;
+          errorOverlay.classList.add('active');
+          autoRetryContainer.style.display = 'none';
+          manualRetryContainer.style.display = 'flex';
+        });
+    }
+
+    let adultUnlocked = false;
+    const ADULT_URL = 'playlist_adult.m3u';
+    const pwdModal = document.getElementById('pwd-modal');
+    const pwdInput = document.getElementById('pwd-input');
+    const pwdSubmit = document.getElementById('pwd-submit');
+    const pwdCancel = document.getElementById('pwd-cancel');
+    const pwdErrorMsg = document.getElementById('pwd-error-msg');
+
+    pwdInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') pwdSubmit.click();
+    });
+
+    pwdSubmit.addEventListener('click', () => {
+      const val = pwdInput.value.trim();
+      if (val.toLowerCase() === '5050461011') {
+        adultUnlocked = true;
+        pwdErrorMsg.style.display = 'none';
+        pwdModal.style.display = 'none';
+        showToast('قفل بخش بزرگسالان باز شد');
+        loadFromUrl(ADULT_URL);
+      } else {
+        pwdErrorMsg.style.display = 'block';
+        pwdInput.style.borderColor = '#f87171';
+        pwdInput.value = '';
+        pwdInput.focus();
+      }
+    });
+
+    // Category Pills Controller
+    const catPills = document.querySelectorAll('.cat-pill');
+    catPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        catPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+
+        const src = pill.dataset.source;
+        if (src === 'adult_xxx') {
+          if (!adultUnlocked) {
+            pwdInput.value = '';
+            pwdErrorMsg.style.display = 'none';
+            pwdModal.style.display = 'flex';
+            pwdInput.focus();
+          } else {
+            loadFromUrl(ADULT_URL);
+          }
+        } else {
+          loadFromUrl(src);
+        }
+      });
+    });
+
+    // Refresh & Fullscreen buttons in header
+    document.getElementById('btn-refresh-feed').addEventListener('click', () => {
+      if (currentChannelIdx >= 0) {
+        showToast('در حال بارگذاری مجدد...');
+        playChannel(currentChannelIdx);
+      } else if (currentSourceUrl) {
+        loadFromUrl(currentSourceUrl);
+      }
+    });
+
+    document.getElementById('btn-fullscreen-toggle').addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        if (video.requestFullscreen) video.requestFullscreen();
+        else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    });
+
+    pwdCancel.addEventListener('click', () => {
+      pwdErrorMsg.style.display = 'none';
+      pwdModal.style.display = 'none';
+      // Reset active pill to first one
+      catPills.forEach(p => p.classList.remove('active'));
+      catPills[0].classList.add('active');
+      loadFromUrl('playlist.m3u');
+    });
+
+    sourceSelector.addEventListener('change', () => {
+      const val = sourceSelector.value;
+      if (val === 'custom') {
+        urlLoader.style.display = 'inline-block';
+        urlLoader.focus();
+      } else if (val === 'adult_xxx') {
+        urlLoader.style.display = 'none';
+        if (!adultUnlocked) {
+          pwdInput.value = '';
+          pwdModal.style.display = 'flex';
+          pwdInput.focus();
+        } else {
+          loadFromUrl(ADULT_URL);
+        }
+      } else {
+        urlLoader.style.display = 'none';
+        loadFromUrl(val);
+      }
+    });
+
+    document.getElementById('btn-load-url').addEventListener('click', () => {
+      const selected = sourceSelector.value;
+      const targetUrl = (selected === 'custom') ? urlLoader.value.trim() : selected;
+      if (targetUrl) loadFromUrl(targetUrl);
+    });
+
+    document.getElementById('file-loader').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      currentSourceUrl = '';
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        channels = parseM3U(event.target.result);
+        populateGroups();
+        renderChannels();
+        if (channels.length > 0) playChannel(0);
+      };
+      reader.readAsText(file);
+    });
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeTab = btn.dataset.tab;
+        renderChannels();
+      });
+    });
+
+    searchInput.addEventListener('input', renderChannels);
+    groupFilter.addEventListener('change', renderChannels);
+
+    // 2-Second Super-Fast Splash Screen Controller
+    function runIntroSplash() {
+      const splash = document.getElementById('intro-splash');
+      const bar = document.getElementById('splash-bar');
+      const pct = document.getElementById('splash-pct');
+      const skipBtn = document.getElementById('splash-skip');
+      if (!splash) return;
+
+      let progress = 0;
+      let closed = false;
+
+      function closeSplash() {
+        if (closed) return;
+        closed = true;
+        splash.style.opacity = '0';
+        splash.style.transform = 'scale(1.05)';
+        setTimeout(() => {
+          splash.style.display = 'none';
+        }, 500);
+      }
+
+      if (skipBtn) skipBtn.onclick = closeSplash;
+
+      // Finish in ~2 seconds (50 intervals of 40ms)
+      const interval = setInterval(() => {
+        progress += Math.floor(Math.random() * 3) + 2;
+        if (progress >= 100) {
+          progress = 100;
+          bar.style.width = '100%';
+          pct.textContent = '100%';
+          clearInterval(interval);
+          setTimeout(closeSplash, 200);
+        } else {
+          bar.style.width = progress + '%';
+          pct.textContent = progress + '%';
+        }
+      }, 35);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      runIntroSplash();
+      // Expand Telegram WebApp if opened in Telegram
+      if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+      }
+      const params = new URLSearchParams(window.location.search);
+      const deepLinkUrl = params.get('url');
+      const deepLinkChannel = params.get('channel');
+      const initialSource = deepLinkUrl || sourceSelector.value;
+
+      if (deepLinkUrl) {
+        sourceSelector.value = 'custom';
+        urlLoader.style.display = 'inline-block';
+        urlLoader.value = deepLinkUrl;
+      }
+
+      loadFromUrl(initialSource, deepLinkChannel);
+    });
+  </script>
+</body>
+</html>
